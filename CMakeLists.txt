@@ -10,7 +10,7 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "${vcpkg_SOURCE_DIR}/scripts/buildsystems/vcpkg.cmake")
 endif()
 
-project(SDL_Qt_ImGui_Example)
+project(SDL_Qt_ImGui_Example C CXX)
 
 #add_executable(SDL_Qt_ImGui_Example)
 
@@ -69,10 +69,10 @@ elseif(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
     find_program(TOOL_MACDEPLOYQT_DEBUG NAMES macdeployqt.debug.bat)
     find_program(TOOL_MACDEPLOYQT NAMES macdeployqt)
 
-    add_custom_command(TARGET SDL_Qt_ImGui_Example POST_BUILD
-        COMMAND $<IF:$<CONFIG:DEBUG>,${TOOL_MACDEPLOYQT_DEBUG},${TOOL_MACDEPLOYQT}>
-                $<TARGET_FILE:SDL_Qt_ImGui_Example>
-        COMMENT "Running macdeployqt..."
-    )
+    #add_custom_command(TARGET SDL_Qt_ImGui_Example POST_BUILD
+    #    COMMAND $<IF:$<CONFIG:DEBUG>,${TOOL_MACDEPLOYQT_DEBUG},${TOOL_MACDEPLOYQT}>
+    #            $<TARGET_FILE_NAME:SDL_Qt_ImGui_Example>
+    #    COMMENT "Running macdeployqt..."
+    #)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
 endif()

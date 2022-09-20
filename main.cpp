@@ -35,16 +35,32 @@ public:
 
     void Initialize()
     {
-        mWindow = SDL_CreateWindowFrom(reinterpret_cast<void*>(winId()));
+        mWindowId = reinterpret_cast<void*>(winId());
+        mWindow = SDL_CreateWindowFrom(mWindowId);
         mRenderer = SDL_CreateRenderer(mWindow, -1, 0);
+        printf("Window {%p}, Renderer {%p}\n", mWindow, mRenderer);
+        mInitialized = true;
     }
 
     void Update()
     {
+        if (reinterpret_cast<void*>(winId()) != mWindowId)
+        {
+            SDL_DestroyRenderer(mRenderer);
+            SDL_DestroyWindow(mWindow);
+
+            mWindowId = reinterpret_cast<void*>(winId());
+
+            mWindow = SDL_CreateWindowFrom(mWindowId);
+            mRenderer = SDL_CreateRenderer(mWindow, -1, 0);
+            printf("WindowId Changeed! new Window {%p}, Renderer {%p}\n", mWindow, mRenderer);
+        }
+
         SDL_Event event;
         //Handle events on queue
         while(SDL_PollEvent(&event) != 0)
         {
+            printf("Event from Window {%p}\n", mWindow);
         }
 
         int width, height;
@@ -77,16 +93,37 @@ public:
         //Update screen
         SDL_RenderPresent( mRenderer );
 
-        QTimer::singleShot(0, [this]()
-        {
-          this->Update();
-        });
+        printf("Window {%p}, Renderer {%p}\n", mWindow, mRenderer);
+
+        //QTimer::singleShot(0, [this]()
+        //{
+        //  this->Update();
+        //});
     }
 
     //void Update()
     //{
     //    puts("woo");
     //}
+
+    bool event(QEvent* event) override
+    {
+        if (event->type() == QEvent::UpdateRequest)
+        {
+            Update();
+            return false;
+        }
+        else 
+        {
+            return QWindow::event(event);
+        }
+    }
+
+    void exposeEvent(QExposeEvent*) override
+    {
+        Initialize();
+        requestUpdate();
+    }
 
     void resizeEvent(QResizeEvent* aEvent) override
     {
@@ -118,6 +155,8 @@ public:
 private:
     SDL_Window* mWindow = nullptr;
     SDL_Renderer* mRenderer = nullptr;
+    bool mInitialized = false;
+    void* mWindowId;
 };
 
 
@@ -203,37 +242,33 @@ int main(int argc, char *argv[])
     {
         auto sdlWindow = new QSdlWindow();
         auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
+        centralTabs->addTab(sdlWidget, "SdlWindow");
         sdlWidget->setWindowTitle("SdlWindow");
         sdlWidget->setMinimumSize(480, 320);
-        sdlWindow->Initialize();
 
-        centralTabs->addTab(sdlWidget, "SdlWindow");
 
     
-        QTimer::singleShot(0, [sdlWindow]()
-        {
-            sdlWindow->Update();
-        });
+        //QTimer::singleShot(0, [sdlWindow]()
+        //{
+        //    sdlWindow->Update();
+        //});
     }
-
 
     {
         auto sdlWindow = new QSdlWindow();
         auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
+        centralTabs->addTab(sdlWidget, "SdlWindow2");
         sdlWidget->setWindowTitle("SdlWindow2");
         sdlWidget->setMinimumSize(480, 320);
-        sdlWindow->Initialize();
         sdlWindow->mClearColor = { 0x00, 0x00, 0x00, 0xFF };;
         sdlWindow->mQuadColor = { 0x00, 0x00, 0xFF, 0xFF };;
 
-        centralTabs->addTab(sdlWidget, "SdlWindow2");
 
-        QTimer::singleShot(0, [sdlWindow]()
-        {
-            sdlWindow->Update();
-        });
+        //QTimer::singleShot(0, [sdlWindow]()
+        //{
+        //    sdlWindow->Update();
+        //});
     }
-
 
 
 
