@@ -10,7 +10,6 @@
 #include "QTextEdit"
 #include "QMenuBar"
 #include "QToolBar"
-#include "QAction"
 #include "QWindow"
 #include "QTimer"
 
@@ -24,14 +23,8 @@ struct color
 class QSdlWindow : public QWindow
 {
 public:
-    QSdlWindow()
-    {
-    }
-
-    ~QSdlWindow()
-    {
-
-    }
+    QSdlWindow() = default;
+    ~QSdlWindow() override = default;
 
     void Initialize()
     {
@@ -39,7 +32,6 @@ public:
         mWindow = SDL_CreateWindowFrom(mWindowId);
         mRenderer = SDL_CreateRenderer(mWindow, -1, 0);
         printf("Window {%p}, Renderer {%p}\n", mWindow, mRenderer);
-        mInitialized = true;
     }
 
     void Update()
@@ -94,17 +86,8 @@ public:
         SDL_RenderPresent( mRenderer );
 
         printf("Window {%p}, Renderer {%p}\n", mWindow, mRenderer);
-
-        //QTimer::singleShot(0, [this]()
-        //{
-        //  this->Update();
-        //});
     }
 
-    //void Update()
-    //{
-    //    puts("woo");
-    //}
 
     bool event(QEvent* event) override
     {
@@ -121,7 +104,7 @@ public:
 
     void exposeEvent(QExposeEvent*) override
     {
-        Initialize();
+        //Initialize();
         requestUpdate();
     }
 
@@ -155,36 +138,14 @@ public:
 private:
     SDL_Window* mWindow = nullptr;
     SDL_Renderer* mRenderer = nullptr;
-    bool mInitialized = false;
-    void* mWindowId;
+    void* mWindowId = nullptr;
 };
-
-
-
-void MakeTreeDockables(QMainWindow *window, Qt::DockWidgetArea area, QAbstractItemModel *model)
-{ 
-    // Self explainatory
-    QTreeView *tree = new QTreeView();
-    // Not as much, a model is a set of data that the tree and various 
-    // other objects can act on. In this case, this is the data that the 
-    // tree view will allow us to traverse.
-    tree->setModel(model);
-    tree->show();
-
-    // DockWidgets are like TabWidgets, but for the dock area. These 
-    // Widgets can be pulled from the dock, put into their own windows, 
-    // and moved back into the docking area.
-    QDockWidget *dock = new QDockWidget("FileTree", window);
-    dock->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea |
-                        Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-
-    dock->setWidget(tree);
-
-    window->addDockWidget(area, dock);
-}
 
 int main(int argc, char *argv[])
 {
+    SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, "1");
+    //SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "1");
+
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
@@ -194,7 +155,7 @@ int main(int argc, char *argv[])
 
     // Make a window. This type has support for docking and gives a 
     // central window in the middle of the docking panels that doesn't move.
-    QMainWindow *window = new QMainWindow;
+    auto window = new QMainWindow;
 
     // Enables "infinite docking".
     window->setDockNestingEnabled(true);
@@ -204,15 +165,15 @@ int main(int argc, char *argv[])
     window->resize(850, 700);
 
     // Used to store widgets in the central widget.
-    QTabWidget *centralTabs = new QTabWidget;
+    auto centralTabs = new QTabWidget;
     window->setCentralWidget(centralTabs);
 
     // Adding a menuTab layer for menu options.
-    QMenuBar *menuTabs = new QMenuBar(centralTabs);
+    auto menuTabs = new QMenuBar(centralTabs);
     window->setMenuBar(menuTabs);
 
     // Adding a toolTab layer for tools options.
-    QToolBar *toolTabs = new QToolBar(centralTabs);
+    auto toolTabs = new QToolBar(centralTabs);
     window->addToolBar(toolTabs);
 
     // Actions that will handle the events from our buttons.
@@ -229,12 +190,12 @@ int main(int argc, char *argv[])
     centralTabs->setUsesScrollButtons(true);
 
     // Add tab options for the menu bar layer.
-    QMenu* fileMenu = new QMenu("File");
+    auto fileMenu = new QMenu("File");
     fileMenu->addMenu(new QMenu("Open"));
 
     menuTabs->addMenu(fileMenu);
 
-    QTextEdit *textEdit = new QTextEdit;
+    auto textEdit = new QTextEdit;
     
     centralTabs->addTab(textEdit, "File 2");
 
@@ -245,6 +206,7 @@ int main(int argc, char *argv[])
         centralTabs->addTab(sdlWidget, "SdlWindow");
         sdlWidget->setWindowTitle("SdlWindow");
         sdlWidget->setMinimumSize(480, 320);
+        sdlWindow->Initialize();
 
 
     
@@ -260,8 +222,9 @@ int main(int argc, char *argv[])
         centralTabs->addTab(sdlWidget, "SdlWindow2");
         sdlWidget->setWindowTitle("SdlWindow2");
         sdlWidget->setMinimumSize(480, 320);
-        sdlWindow->mClearColor = { 0x00, 0x00, 0x00, 0xFF };;
-        sdlWindow->mQuadColor = { 0x00, 0x00, 0xFF, 0xFF };;
+        sdlWindow->mClearColor = { 0x00, 0x00, 0x00, 0xFF };
+        sdlWindow->mQuadColor = { 0x00, 0x00, 0xFF, 0xFF };
+        sdlWindow->Initialize();
 
 
         //QTimer::singleShot(0, [sdlWindow]()
@@ -275,5 +238,5 @@ int main(int argc, char *argv[])
 
     window->show();
   
-    return app.exec();
+    return QApplication::exec();
 }
