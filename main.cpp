@@ -12,61 +12,13 @@
 #include "QToolBar"
 #include "QWindow"
 #include "QTimer"
-
-#include "DockManager.h"
+#include "QResizeEvent"
 
 #include "SDL2/SDL.h"
 
 #include "imgui.h"
 
 #include "glad/glad.h"
-
-class DockOwningMainWindow : public QMainWindow
-{
-public:
-    
-    explicit DockOwningMainWindow (QWidget *parent = nullptr) :
-        QMainWindow(parent)
-    {
-        // Create the dock manager after the ui is setup. Because the
-        // parent parameter is a QMainWindow the dock manager registers
-        // itself as the central widget as such the ui must be set up first.
-        mDockManager = new ads::CDockManager(this);
-
-        //// Create example content label - this can be any application specific
-        //// widget
-        //QLabel* l = new QLabel();
-        //l->setWordWrap(true);
-        //l->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-        //l->setText("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ");
-        //
-        //// Create a dock widget with the title Label 1 and set the created label
-        //// as the dock widget content
-        //ads::CDockWidget* DockWidget = new ads::CDockWidget("Label 1");
-        //DockWidget->setWidget(l);
-
-        // Add the toggleViewAction of the dock widget to the menu to give
-        // the user the possibility to show the dock widget if it has been closed
-        //ui->menuView->addAction(DockWidget->toggleViewAction());
-
-        // Add the dock widget to the top dock widget area
-        //mDockManager->addDockWidget(ads::TopDockWidgetArea, DockWidget);
-    }
-
-    ~DockOwningMainWindow ()
-    {
-    }
-
-    ads::CDockManager* GetDockManager()
-    {
-        return mDockManager;
-    }
-
-private:
-    
-    // The main container for docking
-    ads::CDockManager* mDockManager;
-};
 
 struct color
 {
@@ -100,12 +52,13 @@ public:
     QSdlWindow() = default;
     ~QSdlWindow() override = default;
     
+
+    // GL Stuff, needs to be factored out.
     unsigned int vertexShader;
     unsigned int fragmentShader;
     unsigned int shaderProgram;
     unsigned int VAO;
-    
-unsigned int VBO;
+    unsigned int VBO;
 
     void Initialize()
     {
@@ -117,7 +70,6 @@ unsigned int VBO;
         SDL_GL_MakeCurrent(mWindow, mGlContext);
         
         gladLoadGLLoader(SDL_GL_GetProcAddress);
-
         
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -152,10 +104,9 @@ unsigned int VBO;
 
     void Update()
     {
-        requestUpdate();
-
         SDL_GL_MakeCurrent(mWindow, mGlContext);
-        
+        gladLoadGLLoader(SDL_GL_GetProcAddress);
+
         // Rendering
         int width, height;
         SDL_GetWindowSize(mWindow, &width, &height);
@@ -172,7 +123,7 @@ unsigned int VBO;
 
         SDL_GL_SwapWindow(mWindow);
 
-        //printf("Window {%p}\n", mWindow);
+        requestUpdate();
     }
 
 
@@ -292,94 +243,80 @@ int main(int argc, char *argv[])
 
     // Make a window. This type has support for docking and gives a 
     // central window in the middle of the docking panels that doesn't move.
-    auto window = new DockOwningMainWindow;
+    auto window = new QMainWindow;
+
+    //QDockWidget *dockWidget = new QDockWidget(window);
+    //dockWidget->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea |
+    //                    Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    //
+    //window->setCentralWidget(dockWidget);
 
     // Enables "infinite docking".
-    //window->setDockNestingEnabled(true);
+    window->setDockNestingEnabled(true);
 
     // Sets the default window size.
     window->resize(850, 700);
 
-    //// Used to store widgets in the central widget.
-    //auto centralTabs = new QTabWidget;
-    //window->setCentralWidget(centralTabs);
-    //
-    //// Adding a menuTab layer for menu options.
-    //auto menuTabs = new QMenuBar(centralTabs);
-    //window->setMenuBar(menuTabs);
-    //
-    //// Adding a toolTab layer for tools options.
-    //auto toolTabs = new QToolBar(centralTabs);
-    //window->addToolBar(toolTabs);
-    //
-    //// Actions that will handle the events from our buttons.
-    //toolTabs->addAction("Play");
-    //toolTabs->addAction("Pause");
-    //toolTabs->addAction("Stop");
-    //
-    //// You can move the tabs around.
-    //centralTabs->setMovable(true);
-    //// Tabs get close buttons.
-    //centralTabs->setTabsClosable(true);
-    //// When there are two many tabs, this will make buttons to scroll 
-    //// through them.
-    //centralTabs->setUsesScrollButtons(true);
-    //
-    //// Add tab options for the menu bar layer.
-    //auto fileMenu = new QMenu("File");
-    //fileMenu->addMenu(new QMenu("Open"));
-    //
-    //menuTabs->addMenu(fileMenu);
-    //
+    // Used to store widgets in the central widget.
+    auto centralTabs = new QTabWidget;
+    window->setCentralWidget(centralTabs);
+    
+    // Adding a menuTab layer for menu options.
+    auto menuTabs = new QMenuBar(centralTabs);
+    window->setMenuBar(menuTabs);
+    
+    // Adding a toolTab layer for tools options.
+    auto toolTabs = new QToolBar(centralTabs);
+    window->addToolBar(toolTabs);
+    
+    // Actions that will handle the events from our buttons.
+    toolTabs->addAction("Play");
+    toolTabs->addAction("Pause");
+    toolTabs->addAction("Stop");
+    
+    // You can move the tabs around.
+    centralTabs->setMovable(true);
+    // Tabs get close buttons.
+    centralTabs->setTabsClosable(true);
+    // When there are two many tabs, this will make buttons to scroll 
+    // through them.
+    centralTabs->setUsesScrollButtons(true);
+    
+    // Add tab options for the menu bar layer.
+    auto fileMenu = new QMenu("File");
+    fileMenu->addMenu(new QMenu("Open"));
+    
+    menuTabs->addMenu(fileMenu);
+    
     auto textEdit = new QTextEdit;
-    window->GetDockManager()->addDockWidget(ads::CenterDockWidgetArea, new ads::CDockWidget("Text Edit", textEdit));
+
+    window->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget("Text Edit", textEdit));
 
     
     {
-        auto dockWidget = new ads::CDockWidget("SdlWindow");
-        dockWidget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
         auto sdlWindow = new QSdlWindow();
-        auto sdlWidget = QWidget::createWindowContainer(sdlWindow, dockWidget);
-        dockWidget->setWidget(sdlWidget, ads::CDockWidget::ForceNoScrollArea);
+        auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
 
-        //centralTabs->addTab(sdlWidget, "SdlWindow");
-        window->GetDockManager()->addDockWidget(ads::CenterDockWidgetArea, new ads::CDockWidget("SdlWindow", sdlWidget));
+        window->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget("SdlWindow", sdlWidget));
         sdlWidget->setWindowTitle("SdlWindow");
         sdlWidget->setMinimumSize(480, 320);
         sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sdlWindow->mClearColor = { 0x00, 0x00, 0xFF, 0xFF };
         sdlWindow->mQuadColor = { 0x00, 0x00, 0xFF, 0xFF };
         sdlWindow->Initialize();
-
-
-    
-        //QTimer::singleShot(0, [sdlWindow]()
-        //{
-        //    sdlWindow->Update();
-        //});
     }
 
     {
-        auto dockWidget = new ads::CDockWidget("SdlWindow2");
-        dockWidget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
         auto sdlWindow = new QSdlWindow();
-        auto sdlWidget = QWidget::createWindowContainer(sdlWindow, dockWidget);
-        dockWidget->setWidget(sdlWidget, ads::CDockWidget::ForceNoScrollArea);
+        auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
 
-        //centralTabs->addTab(sdlWidget, "SdlWindow2");
-        window->GetDockManager()->addDockWidget(ads::CenterDockWidgetArea, dockWidget);
+        window->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget("SdlWindow", sdlWidget));
         sdlWidget->setWindowTitle("SdlWindow2");
         sdlWidget->setMinimumSize(480, 320);
         sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sdlWindow->mClearColor = { 0xFF, 0x00, 0x00, 0xFF };
         sdlWindow->mQuadColor = { 0x00, 0x00, 0xFF, 0xFF };
         sdlWindow->Initialize();
-
-
-        //QTimer::singleShot(0, [sdlWindow]()
-        //{
-        //    sdlWindow->Update();
-        //});
     }
 
     QTimer::singleShot(0, []()
