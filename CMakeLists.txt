@@ -3,8 +3,10 @@ cmake_minimum_required(VERSION 3.15)
 include(FetchContent)
 FetchContent_Declare(
     vcpkg
-    GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
+    GIT_REPOSITORY https://github.com/playmer/vcpkg.git
+    GIT_TAG        origin/playmer/FixQt6ForAdvancedDocking
 )
+
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     FetchContent_Populate(vcpkg)
     set(CMAKE_TOOLCHAIN_FILE "${vcpkg_SOURCE_DIR}/scripts/buildsystems/vcpkg.cmake")
@@ -17,11 +19,12 @@ project(SDL_Qt_ImGui_Example C CXX)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
+find_package(glad CONFIG REQUIRED)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
-#find_package(Qt6Widgets CONFIG REQUIRED)
 
-
+find_package(qtadvanceddocking CONFIG REQUIRED)
 
 
 #add_executable(SDL_Qt_ImGui_Example)
@@ -40,6 +43,8 @@ PRIVATE
     imgui::imgui
     imguizmo::imguizmo
     Qt::Widgets
+    glad::glad
+    ads::qtadvanceddocking
 )
 
 #install(TARGETS SDL_Qt_ImGui_Example
