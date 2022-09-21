@@ -20,6 +20,74 @@
 
 #include "glad/glad.h"
 
+
+
+  static char const* Source(GLenum source)
+  {
+    switch (source)
+    {
+    case GL_DEBUG_SOURCE_API: return "DEBUG_SOURCE_API";
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "DEBUG_SOURCE_WINDOW_SYSTEM";
+    case GL_DEBUG_SOURCE_SHADER_COMPILER: return "DEBUG_SOURCE_SHADER_COMPILER";
+    case GL_DEBUG_SOURCE_THIRD_PARTY: return "DEBUG_SOURCE_THIRD_PARTY";
+    case GL_DEBUG_SOURCE_APPLICATION: return "DEBUG_SOURCE_APPLICATION";
+    case GL_DEBUG_SOURCE_OTHER: return "DEBUG_SOURCE_OTHER";
+    default: return "unknown";
+    }
+  }
+
+  static char const* Severity(GLenum severity)
+  {
+    switch (severity)
+    {
+    case GL_DEBUG_SEVERITY_HIGH: return "DEBUG_SEVERITY_HIGH";
+    case GL_DEBUG_SEVERITY_MEDIUM: return "DEBUG_SEVERITY_MEDIUM";
+    case GL_DEBUG_SEVERITY_LOW: return "DEBUG_SEVERITY_LOW";
+    case GL_DEBUG_SEVERITY_NOTIFICATION: return "DEBUG_SEVERITY_NOTIFICATION";
+    default: return "unknown";
+    }
+  }
+
+
+  static char const* Type(GLenum type)
+  {
+    switch (type)
+    {
+    case GL_DEBUG_TYPE_ERROR: return "DEBUG_TYPE_ERROR";
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEBUG_TYPE_DEPRECATED_BEHAVIOR";
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "DEBUG_TYPE_UNDEFINED_BEHAVIOR";
+    case GL_DEBUG_TYPE_PORTABILITY: return "DEBUG_TYPE_PORTABILITY";
+    case GL_DEBUG_TYPE_PERFORMANCE: return "DEBUG_TYPE_PERFORMANCE";
+    case GL_DEBUG_TYPE_MARKER: return "DEBUG_TYPE_MARKER";
+    case GL_DEBUG_TYPE_PUSH_GROUP: return "DEBUG_TYPE_PUSH_GROUP";
+    case GL_DEBUG_TYPE_POP_GROUP: return "DEBUG_TYPE_POP_GROUP";
+    case GL_DEBUG_TYPE_OTHER: return "DEBUG_TYPE_OTHER";
+    default: return "unknown";
+    }
+  }
+
+  static
+    void APIENTRY messageCallback(GLenum source,
+      GLenum type,
+      GLuint id,
+      GLenum severity,
+      GLsizei length,
+      const GLchar* message,
+      const void* userParam)
+  {
+    if (GL_DEBUG_SEVERITY_NOTIFICATION == severity)
+    {
+      return;
+    }
+
+    printf("GL DEBUG CALLBACK:\n    Source = %s\n    type = %s\n    severity = %s\n    message = %s\n",
+      Source(source),
+      Type(type),
+      Severity(severity),
+      message);
+  }
+
+
 struct color
 {
     Uint8 r, g, b, a;
@@ -70,6 +138,15 @@ public:
         SDL_GL_MakeCurrent(mWindow, mGlContext);
         
         gladLoadGLLoader(SDL_GL_GetProcAddress);
+
+        
+        glEnable(GL_DEBUG_OUTPUT);
+
+        // FIXME: This doesn't work on Apple when I tested it, need to look into this more on 
+        // other platforms, and maybe only enable it in dev builds.
+        #if defined(_WIN32)
+            glDebugMessageCallback(messageCallback, this);
+        #endif
         
         vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -200,11 +277,11 @@ void openglinit()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
     // GL 3.3 + GLSL 130
-    const char* glsl_version = "#version 130";
+    const char* glsl_version = "#version 330";
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
 
     // Create window with graphics context
@@ -288,17 +365,34 @@ int main(int argc, char *argv[])
     
     menuTabs->addMenu(fileMenu);
     
-    auto textEdit = new QTextEdit;
-
-    window->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget("Text Edit", textEdit));
+    {
+        auto dockWidget = new QDockWidget("Text Edit", window);
+        auto textEdit = new QTextEdit;
+        dockWidget->setWidget(textEdit);
+        window->addDockWidget(Qt::RightDockWidgetArea, dockWidget);
+    }
 
     
+    //{
+    //    auto sdlWindow = new QSdlWindow();
+    //    auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
+    //
+    //    window->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget("SdlWindow", sdlWidget));
+    //    sdlWidget->setWindowTitle("SdlWindow");
+    //    sdlWidget->setMinimumSize(480, 320);
+    //    sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    //    sdlWindow->mClearColor = { 0x00, 0x00, 0xFF, 0xFF };
+    //    sdlWindow->mQuadColor = { 0x00, 0x00, 0xFF, 0xFF };
+    //    sdlWindow->Initialize();
+    //}
     {
         auto sdlWindow = new QSdlWindow();
+        auto dockWidget = new QDockWidget("SdlWindow1", window);
         auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
+        dockWidget->setWidget(sdlWidget);
 
-        window->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget("SdlWindow", sdlWidget));
-        sdlWidget->setWindowTitle("SdlWindow");
+        window->addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
+        sdlWidget->setWindowTitle("SdlWindow1");
         sdlWidget->setMinimumSize(480, 320);
         sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         sdlWindow->mClearColor = { 0x00, 0x00, 0xFF, 0xFF };
@@ -308,9 +402,11 @@ int main(int argc, char *argv[])
 
     {
         auto sdlWindow = new QSdlWindow();
+        auto dockWidget = new QDockWidget("SdlWindow2", window);
         auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
+        dockWidget->setWidget(sdlWidget);
 
-        window->addDockWidget(Qt::LeftDockWidgetArea, new QDockWidget("SdlWindow", sdlWidget));
+        window->addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
         sdlWidget->setWindowTitle("SdlWindow2");
         sdlWidget->setMinimumSize(480, 320);
         sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
