@@ -10,7 +10,10 @@
     "glad",
     "qtbase",
     "qt-advanced-docking-system",
-    "sdl2",
+    {
+      "name": "sdl2",
+      "features": [ "vulkan" ]
+    },
     "vk-bootstrap",
     "vulkan-memory-allocator"
   ]
