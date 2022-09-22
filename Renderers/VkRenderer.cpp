@@ -635,6 +635,14 @@ void VkRenderer::Resize(unsigned int aWidth, unsigned int aHeight)
 
     // Even though we recycled the previous swapchain, we need to free its resources.
     vkb::destroy_swapchain(mSwapchain);
+
+    // If we get this, we might be screwed, but we also might just be closing the app,
+    // so lets just return and hope we're closing. Yes I should handle this better.
+    if (!swap_ret.has_value() && swap_ret.vk_result() == VK_ERROR_SURFACE_LOST_KHR)
+    {
+        return;
+    }
+
     // Get the new swapchain and place it in our variable
     mSwapchain = swap_ret.value();
 
