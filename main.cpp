@@ -34,6 +34,24 @@ public:
 
     void Initialize(RendererType aType)
     {
+        if (RendererType::VkRenderer == aType)
+        {
+            #ifdef HAVE_VULKAN
+                SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "1");
+            #endif
+                
+            SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, "0");
+        }
+        else if (RendererType::OpenGL3_3Renderer == aType)
+        {
+            SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, "1");
+
+            #ifdef HAVE_VULKAN
+                SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "0");
+            #endif
+        }
+
+
         mWindowId = reinterpret_cast<void*>(winId());
         mWindow = SDL_CreateWindowFrom(mWindowId);
 
@@ -121,12 +139,6 @@ void sdl_event_loop()
 
 int main(int argc, char *argv[])
 {
-    SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, "1");
-
-    #ifdef HAVE_VULKAN
-        SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "1");
-    #endif
-
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
