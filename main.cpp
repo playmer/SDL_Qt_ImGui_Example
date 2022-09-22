@@ -232,6 +232,26 @@ int main(int argc, char *argv[])
         sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
     }
 
+    #if WIN32
+        cChosenRenderer = RendererType::Dx11Renderer;
+    
+        {
+            auto sdlWindow = new QSdlWindow();
+            auto dockWidget = new QDockWidget("Dx11Window", window);
+            auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
+            dockWidget->setWidget(sdlWidget);
+    
+            window->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
+            sdlWidget->setWindowTitle("SdlWindow2");
+            sdlWidget->setMinimumSize(480, 320);
+            sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            sdlWindow->Initialize(cChosenRenderer);
+            sdlWindow->GetRenderer()->mClearColor = { 0x00, 0xFF, 0x00, 0xFF };
+            sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
+        }
+    #endif // WIN32
+
+
     QTimer::singleShot(0, []()
     {
         sdl_event_loop();
