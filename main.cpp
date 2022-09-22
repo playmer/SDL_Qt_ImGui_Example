@@ -20,8 +20,7 @@
 
 
 #include "Renderers/Renderer.hpp"
-
-constexpr RendererType cChosenRenderer = RendererType::VkRenderer;
+ RendererType cChosenRenderer = RendererType::VkRenderer;
     
 class QSdlWindow : public QWindow
 {
@@ -202,7 +201,7 @@ int main(int argc, char *argv[])
 
     {
         auto sdlWindow = new QSdlWindow();
-        auto dockWidget = new QDockWidget("SdlWindow1", window);
+        auto dockWidget = new QDockWidget("VkWindow", window);
         auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
         dockWidget->setWidget(sdlWidget);
 
@@ -215,9 +214,12 @@ int main(int argc, char *argv[])
         sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
     }
 
+
+    cChosenRenderer = RendererType::OpenGL3_3Renderer;
+
     {
         auto sdlWindow = new QSdlWindow();
-        auto dockWidget = new QDockWidget("SdlWindow2", window);
+        auto dockWidget = new QDockWidget("OglWindow", window);
         auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
         dockWidget->setWidget(sdlWidget);
 
