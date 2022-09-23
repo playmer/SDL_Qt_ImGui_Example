@@ -31,8 +31,6 @@ private:
     static const UINT FrameCount = 2;
 
     // Pipeline objects.
-    CD3DX12_VIEWPORT mViewport;
-    CD3DX12_RECT mScissorRect;
     Microsoft::WRL::ComPtr<IDXGISwapChain3> mSwapChain;
     Microsoft::WRL::ComPtr<ID3D12Device> mDevice;
     Microsoft::WRL::ComPtr<ID3D12Resource> mRenderTargets[FrameCount];

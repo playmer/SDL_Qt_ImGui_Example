@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include <d3dcompiler.h>
 
 #include <SDL_syswm.h>
@@ -10,10 +12,10 @@ struct PSInput
     float4 position : SV_POSITION;
 };
 
-PSInput VSMain(float3 position : POSITION)
+PSInput VSMain(float4 position : POSITION)
 {
     PSInput result;
-    result.position = float4(position.x, position.y, position.z, 1.0);
+    result.position = position;
     return result;
 }
 
@@ -274,9 +276,28 @@ void DX12Renderer::Update()
     ThrowIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipelineState.Get()));
 
     // Set necessary state.
+    
+    
+    int width, height;
+    SDL_GetWindowSize(mWindow, &width, &height);
+    D3D12_VIEWPORT viewport = {
+      0.0f,
+      0.0f,
+      (FLOAT)width,
+      (FLOAT)height,
+      0.0f,
+      1.0f };
+
+    
+    D3D12_RECT scissorRect{
+        0,
+        0,
+        width,
+        height
+    };
     mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
-    mCommandList->RSSetViewports(1, &mViewport);
-    mCommandList->RSSetScissorRects(1, &mScissorRect);
+    mCommandList->RSSetViewports(1, &viewport);
+    mCommandList->RSSetScissorRects(1, &scissorRect);
     
     // Indicate that the back buffer will be used as a render target.
     CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -317,6 +338,44 @@ void DX12Renderer::Update()
 
 void DX12Renderer::Resize(unsigned int aWidth, unsigned int aHeight)
 {
+    // Don't allow 0 size swap chain back buffers.
+    aWidth = std::max(1u, aWidth);
+    aHeight = std::max(1u, aHeight);
+
+    // Flush the GPU queue to make sure the swap chain's back buffers
+    // are not being referenced by an in-flight command list.
+    WaitForPreviousFrame();
+
+    for (auto& backBuffer : mRenderTargets)
+    {
+        // Any references to the back buffers must be released
+        // before the swap chain can be resized.
+        backBuffer.Reset();
+    }
+    mRenderTargets[mFrameIndex].Reset();
+
+    DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+    ThrowIfFailed(mSwapChain->GetDesc(&swapChainDesc));
+    ThrowIfFailed(mSwapChain->ResizeBuffers(FrameCount, aWidth, aHeight,
+    swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
+
+    mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
+
+    auto rtvDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
+
+    for (int i = 0; i < FrameCount; ++i)
+    {
+        Microsoft::WRL::ComPtr<ID3D12Resource> backBuffer;
+        ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
+
+        mDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
+
+        mRenderTargets[i] = backBuffer;
+
+        rtvHandle.Offset(rtvDescriptorSize);
+    }
 }
 
 void DX12Renderer::WaitForPreviousFrame()

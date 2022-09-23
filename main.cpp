@@ -158,7 +158,8 @@ void createSdlWindow(QMainWindow* aMainWindow, char const* aWindowName, Renderer
         
     aMainWindow->addDockWidget(aArea, dockWidget);
     sdlWidget->setWindowTitle(aWindowName);
-    sdlWidget->setMinimumSize(480, 320);
+    sdlWidget->setMinimumSize(10, 10);
+    sdlWidget->setBaseSize(480, 320);
     sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     sdlWindow->Initialize();
     sdlWindow->GetRenderer()->mClearColor = aClearColor;
