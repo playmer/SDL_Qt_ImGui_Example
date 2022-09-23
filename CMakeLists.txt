@@ -24,7 +24,6 @@ find_package(glad CONFIG REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
 
-find_package(qtadvanceddocking CONFIG REQUIRED)
 find_package(Vulkan)
 
 #add_executable(SDL_Qt_ImGui_Example)
@@ -92,6 +91,8 @@ endif()
 #install(SCRIPT ${deploy_script})
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL Windows)
+    find_package(directx-headers CONFIG REQUIRED)
+
     target_sources(SDL_Qt_ImGui_Example
     PRIVATE
         Renderers/Dx11Renderer.cpp
@@ -112,6 +113,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL Windows)
 
     target_link_libraries(SDL_Qt_ImGui_Example
     PRIVATE
+        Microsoft::DirectX-Headers
         d3d12.lib
         dxgi.lib
         dxguid.lib

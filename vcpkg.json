@@ -3,13 +3,16 @@
     "version-string": "0.1.0-dev",
   "dependencies": [
     {
+      "name": "directx-headers",
+      "platform": "windows"
+    },
+    {
       "name": "imgui",
       "features": [ "sdl2-binding", "sdl2-renderer-binding" ]
     },
     "imguizmo",
     "glad",
     "qtbase",
-    "qt-advanced-docking-system",
     {
       "name": "sdl2",
       "features": [ "vulkan" ]

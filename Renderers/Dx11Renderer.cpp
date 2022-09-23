@@ -4,7 +4,7 @@
 
 #include "Renderers/Dx11Renderer.hpp"
 
-const char* shader = R"(
+static const char* shader = R"(
 /* vertex attributes go here to input to the vertex shader */
 struct vs_in {
     float3 position_local : POS;

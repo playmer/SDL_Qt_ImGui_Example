@@ -18,43 +18,54 @@
 
 #include "imgui.h"
 
-
 #include "Renderers/Renderer.hpp"
- RendererType cChosenRenderer = RendererType::VkRenderer;
     
 class QSdlWindow : public QWindow
 {
 public:
-    QSdlWindow() = default;
+    QSdlWindow(RendererType aType)
+        : mType{aType}
+    {
+    }
+
     ~QSdlWindow() override = default;
     
 
     // GL Stuff, needs to be factored out.
 
-    void Initialize(RendererType aType)
+    void Initialize()
     {
-        if (RendererType::VkRenderer == aType)
+        if (RendererType::VkRenderer == mType)
         {
             #ifdef HAVE_VULKAN
                 SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "1");
             #endif
                 
             SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, "0");
+            setSurfaceType(QSurface::VulkanSurface);
         }
-        else if (RendererType::OpenGL3_3Renderer == aType)
+        else if (RendererType::OpenGL3_3Renderer == mType)
         {
             SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, "1");
 
             #ifdef HAVE_VULKAN
                 SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "0");
             #endif
+                setSurfaceType(QSurface::OpenGLSurface);
+        }
+        else if (RendererType::Dx12Renderer == mType
+            || RendererType::Dx11Renderer == mType)
+        {
+            setSurfaceType(QSurface::Direct3DSurface);
         }
 
+        destroy();
+        create();
 
         mWindowId = reinterpret_cast<void*>(winId());
         mWindow = SDL_CreateWindowFrom(mWindowId);
 
-        mRenderer = CreateRenderer(aType, mWindow);
+        mRenderer = CreateRenderer(mType, mWindow);
 
         requestUpdate();
     }
@@ -119,6 +130,7 @@ private:
     SDL_Window* mWindow = nullptr;
     void* mWindowId = nullptr;
     std::unique_ptr<Renderer> mRenderer;
+    RendererType mType;
 };
 
 
@@ -134,6 +146,23 @@ void sdl_event_loop()
     {
         sdl_event_loop();
     });
+}
+
+void createSdlWindow(QMainWindow* aMainWindow, char const* aWindowName, RendererType aType, Qt::DockWidgetArea aArea, color aClearColor)
+{
+    auto sdlWindow = new QSdlWindow(aType);
+    auto dockWidget = new QDockWidget(aWindowName, aMainWindow);
+    dockWidget->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
+    dockWidget->setWidget(sdlWidget);
+        
+    aMainWindow->addDockWidget(aArea, dockWidget);
+    sdlWidget->setWindowTitle(aWindowName);
+    sdlWidget->setMinimumSize(480, 320);
+    sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    sdlWindow->Initialize();
+    sdlWindow->GetRenderer()->mClearColor = aClearColor;
+    sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
 }
 
 int main(int argc, char *argv[])
@@ -192,65 +221,20 @@ int main(int argc, char *argv[])
     
     menuTabs->addMenu(fileMenu);
     
-    {
-        auto dockWidget = new QDockWidget("Text Edit", window);
-        auto textEdit = new QTextEdit;
-        dockWidget->setWidget(textEdit);
-        window->addDockWidget(Qt::TopDockWidgetArea, dockWidget);
-    }
-
-    {
-        auto sdlWindow = new QSdlWindow();
-        auto dockWidget = new QDockWidget("VkWindow", window);
-        auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
-        dockWidget->setWidget(sdlWidget);
-
-        window->addDockWidget(Qt::TopDockWidgetArea, dockWidget);
-        sdlWidget->setWindowTitle("SdlWindow1");
-        sdlWidget->setMinimumSize(480, 320);
-        sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        sdlWindow->Initialize(cChosenRenderer);
-        sdlWindow->GetRenderer()->mClearColor = { 0x00, 0x00, 0xFF, 0xFF };
-        sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
-    }
-
-
-    cChosenRenderer = RendererType::OpenGL3_3Renderer;
-
-    {
-        auto sdlWindow = new QSdlWindow();
-        auto dockWidget = new QDockWidget("OglWindow", window);
-        auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
-        dockWidget->setWidget(sdlWidget);
-
-        window->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
-        sdlWidget->setWindowTitle("SdlWindow2");
-        sdlWidget->setMinimumSize(480, 320);
-        sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        sdlWindow->Initialize(cChosenRenderer);
-        sdlWindow->GetRenderer()->mClearColor = { 0xFF, 0x00, 0x00, 0xFF };
-        sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
-    }
+    //{
+    //    auto dockWidget = new QDockWidget("Text Edit", window);
+    //    auto textEdit = new QTextEdit;
+    //    dockWidget->setWidget(textEdit);
+    //    window->addDockWidget(Qt::TopDockWidgetArea, dockWidget);
+    //}
 
     #if WIN32
-        cChosenRenderer = RendererType::Dx11Renderer;
-    
-        {
-            auto sdlWindow = new QSdlWindow();
-            auto dockWidget = new QDockWidget("Dx11Window", window);
-            auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
-            dockWidget->setWidget(sdlWidget);
-    
-            window->addDockWidget(Qt::BottomDockWidgetArea, dockWidget);
-            sdlWidget->setWindowTitle("SdlWindow2");
-            sdlWidget->setMinimumSize(480, 320);
-            sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            sdlWindow->Initialize(cChosenRenderer);
-            sdlWindow->GetRenderer()->mClearColor = { 0x00, 0xFF, 0x00, 0xFF };
-            sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
-        }
+        createSdlWindow(window, "Dx11Window", RendererType::Dx11Renderer, Qt::BottomDockWidgetArea, { 0x00, 0xFF, 0x00, 0xFF });
+        createSdlWindow(window, "Dx12Window", RendererType::Dx12Renderer, Qt::BottomDockWidgetArea, { 0xFF, 0x00, 0xFF, 0xFF });
     #endif // WIN32
 
+    createSdlWindow(window, "VkWindow", RendererType::VkRenderer, Qt::TopDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF });
+    createSdlWindow(window, "OglWindow", RendererType::OpenGL3_3Renderer, Qt::TopDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF });
 
     QTimer::singleShot(0, []()
     {
