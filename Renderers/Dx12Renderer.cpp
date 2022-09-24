@@ -356,8 +356,20 @@ void DX12Renderer::Resize(unsigned int aWidth, unsigned int aHeight)
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
     ThrowIfFailed(mSwapChain->GetDesc(&swapChainDesc));
-    ThrowIfFailed(mSwapChain->ResizeBuffers(FrameCount, aWidth, aHeight,
-    swapChainDesc.BufferDesc.Format, swapChainDesc.Flags));
+
+    auto result = mSwapChain->ResizeBuffers(
+        FrameCount, 
+        aWidth, 
+        aHeight, 
+        swapChainDesc.BufferDesc.Format, 
+        swapChainDesc.Flags);
+
+    // Listen, this could be really bad, or it could just be that we lost the
+    // surface while the app was closing, so lets just assume it's that.
+    if (FAILED(result))
+    {
+        return;
+    }
 
     mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
 

@@ -180,10 +180,11 @@ int main(int argc, char *argv[])
     auto window = new QMainWindow;
     //window->setCentralWidget(nullptr);
     auto centralWidget = new QWidget();
-    centralWidget->setMaximumWidth(0);
-    centralWidget->setMaximumHeight(0);
     window->setCentralWidget(centralWidget);
-    window->centralWidget()->hide();
+    window->centralWidget()->setBaseSize(0, 0);
+    window->centralWidget()->setMinimumSize(0, 0);
+    window->centralWidget()->setMaximumSize(0,0);
+    //window->centralWidget()->hide();
 
     // Enables "infinite docking".
     window->setDockNestingEnabled(true);

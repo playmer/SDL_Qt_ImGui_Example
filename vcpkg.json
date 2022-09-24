@@ -1,23 +1,23 @@
 {
     "name": "fps-cap-example",
     "version-string": "0.1.0-dev",
-  "dependencies": [
-    {
-      "name": "directx-headers",
-      "platform": "windows"
-    },
-    {
-      "name": "imgui",
-      "features": [ "sdl2-binding", "sdl2-renderer-binding" ]
-    },
-    "imguizmo",
-    "glad",
-    "qtbase",
-    {
-      "name": "sdl2",
-      "features": [ "vulkan" ]
-    },
-    "vk-bootstrap",
-    "vulkan-memory-allocator"
-  ]
+    "dependencies": [
+        {
+            "name": "directx-headers",
+            "platform": "windows"
+        },
+        {
+            "name": "imgui",
+            "features": [ "sdl2-binding", "sdl2-renderer-binding" ]
+        },
+        "imguizmo",
+        "glad",
+        "qtbase",
+        {
+            "name": "sdl2",
+            "features": [ "vulkan" ]
+        },
+        "vk-bootstrap",
+        "vulkan-memory-allocator"
+    ]
 }
