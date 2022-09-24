@@ -4,7 +4,7 @@ include(FetchContent)
 FetchContent_Declare(
     vcpkg
     GIT_REPOSITORY https://github.com/playmer/vcpkg.git
-    GIT_TAG        origin/playmer/UpdateVkBootStrap
+    GIT_TAG        origin/playmer/AllTheThings
 )
 
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
@@ -20,7 +20,7 @@ find_package(SDL2 CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(imguizmo CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
-
+find_package(qtadvanceddocking CONFIG REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 qt_standard_project_setup()
 
@@ -54,7 +54,7 @@ PRIVATE
     imguizmo::imguizmo
     Qt::Widgets
     glad::glad
-    #ads::qtadvanceddocking
+    ads::qtadvanceddocking
 )
 
 if (${Vulkan_FOUND})

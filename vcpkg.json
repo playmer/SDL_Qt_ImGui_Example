@@ -1,5 +1,5 @@
 {
-    "name": "fps-cap-example",
+    "name": "sdl-qt-imgui-example",
     "version-string": "0.1.0-dev",
     "dependencies": [
         {
@@ -13,6 +13,7 @@
         "imguizmo",
         "glad",
         "qtbase",
+        "qt-advanced-docking-system",
         {
             "name": "sdl2",
             "features": [ "vulkan" ]

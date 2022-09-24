@@ -19,6 +19,57 @@
 #include "imgui.h"
 
 #include "Renderers/Renderer.hpp"
+
+#include "DockManager.h"
+
+class DockOwningMainWindow : public QMainWindow
+{
+public:
+
+    explicit DockOwningMainWindow(QWidget* parent = nullptr) :
+        QMainWindow(parent)
+    {
+        // Create the dock manager after the ui is setup. Because the
+        // parent parameter is a QMainWindow the dock manager registers
+        // itself as the central widget as such the ui must be set up first.
+        mDockManager = new ads::CDockManager(this);
+
+        //// Create example content label - this can be any application specific
+        //// widget
+        //QLabel* l = new QLabel();
+        //l->setWordWrap(true);
+        //l->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+        //l->setText("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ");
+        //
+        //// Create a dock widget with the title Label 1 and set the created label
+        //// as the dock widget content
+        //ads::CDockWidget* DockWidget = new ads::CDockWidget("Label 1");
+        //DockWidget->setWidget(l);
+
+        // Add the toggleViewAction of the dock widget to the menu to give
+        // the user the possibility to show the dock widget if it has been closed
+        //ui->menuView->addAction(DockWidget->toggleViewAction());
+
+        // Add the dock widget to the top dock widget area
+        //mDockManager->addDockWidget(ads::TopDockWidgetArea, DockWidget);
+    }
+
+    ~DockOwningMainWindow()
+    {
+    }
+
+    ads::CDockManager* GetDockManager()
+    {
+        return mDockManager;
+    }
+
+private:
+
+    // The main container for docking
+    ads::CDockManager* mDockManager;
+};
+
+
     
 class QSdlWindow : public QWindow
 {
@@ -148,15 +199,16 @@ void sdl_event_loop()
     });
 }
 
-void createSdlWindow(QMainWindow* aMainWindow, char const* aWindowName, RendererType aType, Qt::DockWidgetArea aArea, color aClearColor)
+void createSdlWindow(DockOwningMainWindow* aMainWindow, char const* aWindowName, RendererType aType, ads::DockWidgetArea aArea, color aClearColor)
 {
     auto sdlWindow = new QSdlWindow(aType);
-    auto dockWidget = new QDockWidget(aWindowName, aMainWindow);
-    dockWidget->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    auto dockWidget = new ads::CDockWidget(aWindowName, aMainWindow);
+    dockWidget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
+    //dockWidget->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
     dockWidget->setWidget(sdlWidget);
-        
-    aMainWindow->addDockWidget(aArea, dockWidget);
+
+    aMainWindow->GetDockManager()->addDockWidget(aArea, dockWidget);
     sdlWidget->setWindowTitle(aWindowName);
     sdlWidget->setMinimumSize(10, 10);
     sdlWidget->setBaseSize(480, 320);
@@ -177,13 +229,13 @@ int main(int argc, char *argv[])
 
     // Make a window. This type has support for docking and gives a 
     // central window in the middle of the docking panels that doesn't move.
-    auto window = new QMainWindow;
+    auto window = new DockOwningMainWindow;
     //window->setCentralWidget(nullptr);
-    auto centralWidget = new QWidget();
-    window->setCentralWidget(centralWidget);
-    window->centralWidget()->setBaseSize(0, 0);
-    window->centralWidget()->setMinimumSize(0, 0);
-    window->centralWidget()->setMaximumSize(0,0);
+    //auto centralWidget = new QWidget();
+    //window->setCentralWidget(centralWidget);
+    //window->centralWidget()->setBaseSize(0, 0);
+    //window->centralWidget()->setMinimumSize(0, 0);
+    //window->centralWidget()->setMaximumSize(0,0);
     //window->centralWidget()->hide();
 
     // Enables "infinite docking".
@@ -192,36 +244,36 @@ int main(int argc, char *argv[])
     // Sets the default window size.
     window->resize(850, 700);
 
-    // Used to store widgets in the central widget.
-    auto centralTabs = new QTabWidget;
-    window->setCentralWidget(centralTabs);
-    
-    // Adding a menuTab layer for menu options.
-    auto menuTabs = new QMenuBar(centralTabs);
-    window->setMenuBar(menuTabs);
-    
-    // Adding a toolTab layer for tools options.
-    auto toolTabs = new QToolBar(centralTabs);
-    window->addToolBar(toolTabs);
-    
-    // Actions that will handle the events from our buttons.
-    toolTabs->addAction("Play");
-    toolTabs->addAction("Pause");
-    toolTabs->addAction("Stop");
-    
-    // You can move the tabs around.
-    centralTabs->setMovable(true);
-    // Tabs get close buttons.
-    centralTabs->setTabsClosable(true);
-    // When there are two many tabs, this will make buttons to scroll 
-    // through them.
-    centralTabs->setUsesScrollButtons(true);
-    
-    // Add tab options for the menu bar layer.
-    auto fileMenu = new QMenu("File");
-    fileMenu->addMenu(new QMenu("Open"));
-    
-    menuTabs->addMenu(fileMenu);
+    //// Used to store widgets in the central widget.
+    //auto centralTabs = new QTabWidget;
+    //window->setCentralWidget(centralTabs);
+    //
+    //// Adding a menuTab layer for menu options.
+    //auto menuTabs = new QMenuBar(centralTabs);
+    //window->setMenuBar(menuTabs);
+    //
+    //// Adding a toolTab layer for tools options.
+    //auto toolTabs = new QToolBar(centralTabs);
+    //window->addToolBar(toolTabs);
+    //
+    //// Actions that will handle the events from our buttons.
+    //toolTabs->addAction("Play");
+    //toolTabs->addAction("Pause");
+    //toolTabs->addAction("Stop");
+    //
+    //// You can move the tabs around.
+    //centralTabs->setMovable(true);
+    //// Tabs get close buttons.
+    //centralTabs->setTabsClosable(true);
+    //// When there are two many tabs, this will make buttons to scroll 
+    //// through them.
+    //centralTabs->setUsesScrollButtons(true);
+    //
+    //// Add tab options for the menu bar layer.
+    //auto fileMenu = new QMenu("File");
+    //fileMenu->addMenu(new QMenu("Open"));
+    //
+    //menuTabs->addMenu(fileMenu);
     
     //{
     //    auto dockWidget = new QDockWidget("Text Edit", window);
@@ -231,12 +283,12 @@ int main(int argc, char *argv[])
     //}
 
     #if WIN32
-        createSdlWindow(window, "Dx11Window", RendererType::Dx11Renderer, Qt::BottomDockWidgetArea, { 0x00, 0xFF, 0x00, 0xFF });
-        createSdlWindow(window, "Dx12Window", RendererType::Dx12Renderer, Qt::BottomDockWidgetArea, { 0xFF, 0x00, 0xFF, 0xFF });
+        createSdlWindow(window, "Dx11Window", RendererType::Dx11Renderer, ads::TopDockWidgetArea, { 0x00, 0xFF, 0x00, 0xFF });
+        createSdlWindow(window, "Dx12Window", RendererType::Dx12Renderer, ads::BottomDockWidgetArea, { 0xFF, 0x00, 0xFF, 0xFF });
     #endif // WIN32
 
-    createSdlWindow(window, "VkWindow", RendererType::VkRenderer, Qt::TopDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF });
-    createSdlWindow(window, "OglWindow", RendererType::OpenGL3_3Renderer, Qt::TopDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF });
+    createSdlWindow(window, "VkWindow", RendererType::VkRenderer, ads::LeftDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF });
+    createSdlWindow(window, "OglWindow", RendererType::OpenGL3_3Renderer, ads::RightDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF });
 
     QTimer::singleShot(0, []()
     {
