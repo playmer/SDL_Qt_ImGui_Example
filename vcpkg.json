@@ -12,7 +12,10 @@
         },
         "imguizmo",
         "glad",
-        "qtbase",
+        {
+            "name": "qtbase",
+            "features": [ "vulkan" ]
+        },
         "qt-advanced-docking-system",
         {
             "name": "sdl2",
