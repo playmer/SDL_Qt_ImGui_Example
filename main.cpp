@@ -5,6 +5,8 @@
 #include "QFileSystemModel"
 #include "QtGui/QStandardItemModel.h"
 
+#include "SDL_syswm.h"
+
 #include "QMainWindow"
 #include "QDockWidget"
 #include "QTextEdit"
@@ -74,7 +76,7 @@ private:
 class QSdlWindow : public QWindow
 {
 public:
-    QSdlWindow(RendererType aType)
+    QSdlWindow(QWindow* aWindow, RendererType aType)
         : mType{aType}
     {
     }
@@ -199,9 +201,84 @@ void sdl_event_loop()
     });
 }
 
-void createSdlWindow(DockOwningMainWindow* aMainWindow, char const* aWindowName, RendererType aType, ads::DockWidgetArea aArea, color aClearColor)
+void update_renderer(Renderer* aRenderer)
 {
-    auto sdlWindow = new QSdlWindow(aType);
+    aRenderer->Update();
+    
+    QTimer::singleShot(0, [aRenderer]()
+    {
+        update_renderer(aRenderer);
+    });
+}
+
+std::unique_ptr<Renderer> createSdlWindow(DockOwningMainWindow* aMainWindow, char const* aWindowName, RendererType aType, ads::DockWidgetArea aArea, color aClearColor)
+{
+    int flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+
+    switch (aType)
+    {
+        case RendererType::VkRenderer:
+        {
+            flags |= SDL_WINDOW_VULKAN;
+            break;
+        }
+        case RendererType::OpenGL3_3Renderer:
+        {
+            flags |= SDL_WINDOW_OPENGL;
+            break;
+        }
+        case RendererType::MetalRenderer:
+        {
+            flags |= SDL_WINDOW_METAL;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    SDL_Window* window = SDL_CreateWindow(aWindowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, flags);
+    //SDL_GetWindow
+
+    WId winId;
+
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(window, &wmInfo);
+
+    switch (wmInfo.subsystem) {
+        case SDL_SYSWM_WINDOWS:
+        {
+            #ifdef SDL_VIDEO_DRIVER_WINDOWS
+                winId = (WId)wmInfo.info.win.window;
+            #endif // SDL_VIDEO_DRIVER_WINDOWS
+            break;
+        }
+        case SDL_SYSWM_COCOA:
+        {
+            #ifdef  SDL_VIDEO_DRIVER_COCOA
+                winId = (WId)wmInfo.info.cocoa.window;
+            #endif // SDL_VIDEO_DRIVER_COCOA
+            break;
+        }
+        case SDL_SYSWM_X11:
+        {
+            #ifdef  SDL_VIDEO_DRIVER_X11
+                winId = (WId)wmInfo.info.cocoa.window;
+            #endif // SDL_VIDEO_DRIVER_X11
+            break;
+        }
+        case SDL_SYSWM_WAYLAND:
+        {
+            #ifdef  SDL_VIDEO_DRIVER_COCOA
+                winId = (WId)wmInfo.info.cocoa.window;
+            #endif // SDL_VIDEO_DRIVER_COCOA
+            break;
+        }
+    }
+
+    auto sdlWindow = QWindow::fromWinId(winId);
     auto dockWidget = new ads::CDockWidget(aWindowName, aMainWindow);
     dockWidget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
     //dockWidget->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -213,9 +290,19 @@ void createSdlWindow(DockOwningMainWindow* aMainWindow, char const* aWindowName,
     sdlWidget->setMinimumSize(10, 10);
     sdlWidget->setBaseSize(480, 320);
     sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    sdlWindow->Initialize();
-    sdlWindow->GetRenderer()->mClearColor = aClearColor;
-    sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
+    //sdlWindow->Initialize();
+    //sdlWindow->GetRenderer()->mClearColor = aClearColor;
+    //sdlWindow->GetRenderer()->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
+
+    auto renderer = CreateRenderer(aType, window);
+    renderer->Initialize();
+    renderer->mClearColor = aClearColor;
+    renderer->mTriangleColor = { 0x00, 0x00, 0xFF, 0xFF };
+    QTimer::singleShot(0, [renderer = renderer.get()]()
+    {
+        update_renderer(renderer);
+    });
+    return renderer;
 }
 
 int main(int argc, char *argv[])
@@ -282,13 +369,15 @@ int main(int argc, char *argv[])
     //    window->addDockWidget(Qt::TopDockWidgetArea, dockWidget);
     //}
 
+    std::vector<std::unique_ptr<Renderer>> renderers;
+
     #if WIN32
-        createSdlWindow(window, "Dx11Window", RendererType::Dx11Renderer, ads::TopDockWidgetArea, { 0x00, 0xFF, 0x00, 0xFF });
-        createSdlWindow(window, "Dx12Window", RendererType::Dx12Renderer, ads::BottomDockWidgetArea, { 0xFF, 0x00, 0xFF, 0xFF });
+        renderers.emplace_back(createSdlWindow(window, "Dx11Window", RendererType::Dx11Renderer, ads::TopDockWidgetArea, { 0x00, 0xFF, 0x00, 0xFF }));
+        renderers.emplace_back(createSdlWindow(window, "Dx12Window", RendererType::Dx12Renderer, ads::BottomDockWidgetArea, { 0xFF, 0x00, 0xFF, 0xFF }));
     #endif // WIN32
 
-    createSdlWindow(window, "VkWindow", RendererType::VkRenderer, ads::LeftDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF });
-    createSdlWindow(window, "OglWindow", RendererType::OpenGL3_3Renderer, ads::RightDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF });
+    renderers.emplace_back(createSdlWindow(window, "VkWindow", RendererType::VkRenderer, ads::LeftDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF }));
+    renderers.emplace_back(createSdlWindow(window, "OglWindow", RendererType::OpenGL3_3Renderer, ads::RightDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF }));
 
     QTimer::singleShot(0, []()
     {

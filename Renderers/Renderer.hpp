@@ -20,6 +20,7 @@ enum class RendererType
 {
 	Dx11Renderer,
 	Dx12Renderer,
+	MetalRenderer,
 	OpenGL3_3Renderer,
 	VkRenderer
 };
