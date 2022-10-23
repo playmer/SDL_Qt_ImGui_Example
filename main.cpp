@@ -258,7 +258,15 @@ std::unique_ptr<Renderer> createSdlWindow(DockOwningMainWindow* aMainWindow, cha
         case SDL_SYSWM_COCOA:
         {
             #ifdef  SDL_VIDEO_DRIVER_COCOA
-                winId = (WId)wmInfo.info.cocoa.window;
+                if (aType == RendererType::OpenGL3_3Renderer)
+                {
+                    winId = (WId)wmInfo.info.cocoa.window;
+                }
+                else
+                {
+                    auto metalView = SDL_Metal_CreateView(window);
+                    winId = (WId)metalView;
+                }
             #endif // SDL_VIDEO_DRIVER_COCOA
             break;
         }
