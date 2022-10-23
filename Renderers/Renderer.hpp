@@ -44,6 +44,8 @@ public:
 	virtual void Initialize() = 0;
 	virtual void Update() = 0;
 	virtual void Resize(unsigned int aWidth, unsigned int aHeight) = 0;
+    
+    bool Initialized() {return mInitialized;};
 	
     color mClearColor = {0x00, 0x00, 0xFF, 0xFF};
     color mTriangleColor = {0xFF, 0x00, 0x00, 0xFF};
@@ -55,4 +57,5 @@ public:
 
 protected:
 	SDL_Window* mWindow = nullptr;
+    bool mInitialized = false;
 };

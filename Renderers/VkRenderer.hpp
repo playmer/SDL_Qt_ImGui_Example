@@ -113,7 +113,6 @@ private:
     vkb::PhysicalDevice mPhysicalDevice;
     vkb::Device mDevice;
     VkPipelineCache mPipelineCache = VK_NULL_HANDLE;
-    VulkanQueue mTransferQueue;
     VulkanQueue mGraphicsQueue;
     VulkanQueue mPresentQueue;
     vkb::Swapchain mSwapchain;
@@ -129,8 +128,6 @@ private:
     std::vector<VkFramebuffer> mFramebuffers;
 
     VkRenderPass mRenderPass;
-
-    SDL_Window* mWindow;
 
     size_t mCurrentFrame = 0;
     uint32_t mImageIndex = 0;

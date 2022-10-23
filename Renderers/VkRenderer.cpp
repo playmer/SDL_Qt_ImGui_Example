@@ -280,6 +280,10 @@ VkRenderPass VkRenderer::CreateRenderPass()
 VkRenderer::VkRenderer(SDL_Window* aWindow)
     : Renderer{ aWindow }
 {
+}
+
+void VkRenderer::Initialize()
+{
     ///////////////////////////////////////
     // Create Instance
     vkb::InstanceBuilder instance_builder;
@@ -302,7 +306,7 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
     }
 
       unsigned int count;
-      if (!SDL_Vulkan_GetInstanceExtensions(aWindow, &count, nullptr))
+      if (!SDL_Vulkan_GetInstanceExtensions(mWindow, &count, nullptr))
       {
           printf("Failed to get required Vulkan Instance Extensions from SDL\n");
           return;
@@ -312,7 +316,7 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
       size_t additional_extension_count = extensions.size();
       extensions.resize(additional_extension_count + count);
 
-      if (!SDL_Vulkan_GetInstanceExtensions(aWindow, &count, extensions.data() + additional_extension_count)) {
+      if (!SDL_Vulkan_GetInstanceExtensions(mWindow, &count, extensions.data() + additional_extension_count)) {
           printf("Failed to get required Vulkan Instance Extensions from SDL\n");
           return;
       }
@@ -333,7 +337,7 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
     ///////////////////////////////////////
     // Create Surface
     {
-        SDL_bool err = SDL_Vulkan_CreateSurface(aWindow, mInstance.instance, &mSurface);
+        SDL_bool err = SDL_Vulkan_CreateSurface(mWindow, mInstance.instance, &mSurface);
         if (!err) {
             printf("Failed to create Vulkan Surface.\n");
             return;
@@ -348,9 +352,9 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
     {
         auto physical_device_selector_return = phys_device_selector.select();
 
-        if (!physical_device_selector_return) 
+        if (!physical_device_selector_return)
         {
-            // We return out because there's really nothing we can do at this point, there's not a 
+            // We return out because there's really nothing we can do at this point, there's not a
             // single suitable GPU on this system.
             printf("Failed to select Vulkan Physical Device. Error: %s\n", physical_device_selector_return.error().message().c_str());
             return;
@@ -372,16 +376,18 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
 
     ///////////////////////////////////////
     // Create Queues
-    mTransferQueue.Initialize(mDevice, vkb::QueueType::transfer, 30);
     mGraphicsQueue.Initialize(mDevice, vkb::QueueType::graphics, cMinImageCount);
     mPresentQueue.Initialize(mDevice, vkb::QueueType::present, cMinImageCount);
 
     ///////////////////////////////////////
     // Create Swapchain
+    int w,h;
+    SDL_GetWindowSize(mWindow, &w, &h);
     vkb::SwapchainBuilder swapchain_builder{ mDevice, mSurface };
     swapchain_builder.set_desired_format(VkSurfaceFormatKHR{ VK_FORMAT_B8G8R8A8_UNORM, VK_COLORSPACE_SRGB_NONLINEAR_KHR });
+    //swapchain_builder.set_desired_extent(w, h);
     auto swap_ret = swapchain_builder.build();
-    if (!swap_ret) 
+    if (!swap_ret)
     {
         printf("Failed to create Vulkan Swapchain. Error: %s\n", swap_ret.error().message().c_str());
     }
@@ -466,15 +472,12 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
 
     ///////////////////////////////////////
     // Create Framebuffers
-    int w, h;
-    SDL_GetWindowSize(aWindow, &w, &h);
-
     swapchain_images = mSwapchain.get_images().value();
     swapchain_image_views = mSwapchain.get_image_views().value();
 
     mFramebuffers.resize(swapchain_image_views.size());
 
-    for (size_t i = 0; i < swapchain_image_views.size(); i++) 
+    for (size_t i = 0; i < swapchain_image_views.size(); i++)
     {
         VkImageView attachments[] = { swapchain_image_views[i] };
 
@@ -493,11 +496,8 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
             return;
         }
     }
-}
-
-void VkRenderer::Initialize()
-{
-
+    
+    mInitialized = true;
 }
 
 void VkRenderer::Update()
@@ -626,6 +626,7 @@ void VkRenderer::Resize(unsigned int aWidth, unsigned int aHeight)
 {
     vkb::SwapchainBuilder swapchain_builder{ mDevice };
     swapchain_builder.set_desired_format(VkSurfaceFormatKHR{ VK_FORMAT_B8G8R8A8_UNORM, VK_COLORSPACE_SRGB_NONLINEAR_KHR });
+    swapchain_builder.set_desired_extent(aWidth, aHeight);
     auto swap_ret = swapchain_builder.set_old_swapchain(mSwapchain).build();
     if (!swap_ret)
     {

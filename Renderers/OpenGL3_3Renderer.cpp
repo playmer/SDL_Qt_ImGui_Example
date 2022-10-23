@@ -97,7 +97,10 @@ std::unique_ptr<Renderer> CreateOpenGL3_3Renderer(SDL_Window* aWindow)
 OpenGL3_3Renderer::OpenGL3_3Renderer(SDL_Window* aWindow)
 	: Renderer{ aWindow }
 {
-    
+}
+
+void OpenGL3_3Renderer::Initialize()
+{
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
@@ -130,13 +133,17 @@ OpenGL3_3Renderer::OpenGL3_3Renderer(SDL_Window* aWindow)
 
     mGlContext = SDL_GL_CreateContext(mWindow);
     SDL_GL_MakeCurrent(mWindow, mGlContext);
+    
+    //printf("glvendor: %s", glGetString(GL_VENDOR));
+    //printf("glrenderer: %s", glGetString(GL_RENDERER));
+    //printf("glversion: %s", glGetString(GL_VERSION));
 
     gladLoadGLLoader(SDL_GL_GetProcAddress);
 
         
     glEnable(GL_DEBUG_OUTPUT);
 
-    // FIXME: This doesn't work on Apple when I tested it, need to look into this more on 
+    // FIXME: This doesn't work on Apple when I tested it, need to look into this more on
     // other platforms, and maybe only enable it in dev builds.
     #if defined(_WIN32)
         glDebugMessageCallback(messageCallback, this);
@@ -157,9 +164,9 @@ OpenGL3_3Renderer::OpenGL3_3Renderer(SDL_Window* aWindow)
         
     glUseProgram(shaderProgram);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);  
+    glEnableVertexAttribArray(0);
         
-    glGenVertexArrays(1, &VAO);  
+    glGenVertexArrays(1, &VAO);
         
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -168,11 +175,9 @@ OpenGL3_3Renderer::OpenGL3_3Renderer(SDL_Window* aWindow)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * TriangleVerts.size(), TriangleVerts.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);  
-}
-
-void OpenGL3_3Renderer::Initialize()
-{
+    glEnableVertexAttribArray(0);
+    
+    mInitialized = true;
 }
 
 void OpenGL3_3Renderer::Update()

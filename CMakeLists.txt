@@ -122,6 +122,36 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL Windows)
     )
 
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+    find_library(METAL_LIBRARY Metal)
+    if (NOT METAL_LIBRARY)
+        message(FATAL_ERROR "Metal not found")
+    endif()
+    find_library(QUARTZCORE_LIBRARY Metal)
+    if (NOT QUARTZCORE_LIBRARY)
+        message(FATAL_ERROR "QuartzCore not found")
+    endif()
+    find_library(FOUNDATION_LIBRARY Metal)
+    if (NOT FOUNDATION_LIBRARY)
+        message(FATAL_ERROR "Foundation not found")
+    endif()
+
+    target_link_libraries(SDL_Qt_ImGui_Example
+    PRIVATE
+        ${METAL_LIBRARY}
+        ${QUARTZCORE_LIBRARY}
+        ${FOUNDATION_LIBRARY}
+    )
+    target_include_directories(SDL_Qt_ImGui_Example
+    PRIVATE
+        deps/metal-cpp_macOS12_iOS15
+    )
+
+    target_sources(SDL_Qt_ImGui_Example
+    PRIVATE
+        Renderers/MetalRenderer.cpp
+        Renderers/MetalRenderer.hpp
+    )
+
     find_program(TOOL_MACDEPLOYQT_DEBUG NAMES macdeployqt.debug.bat)
     find_program(TOOL_MACDEPLOYQT NAMES macdeployqt)
 

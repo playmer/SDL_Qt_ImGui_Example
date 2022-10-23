@@ -88,6 +88,7 @@ public:
     {
         if (RendererType::VkRenderer == mType)
         {
+            
             #ifdef HAVE_VULKAN
                 SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "1");
             #endif
@@ -116,6 +117,7 @@ public:
         mWindowId = reinterpret_cast<void*>(winId());
         mWindow = SDL_CreateWindowFrom(mWindowId);
 
+
         mRenderer = CreateRenderer(mType, mWindow);
 
         requestUpdate();
@@ -123,7 +125,10 @@ public:
 
     void Update()
     {
-        mRenderer->Update();
+        if (mRenderer && mRenderer->Initialized())
+        {
+            mRenderer->Update();
+        }
         requestUpdate();
     }
 
@@ -143,18 +148,20 @@ public:
 
     void exposeEvent(QExposeEvent*) override
     {
+        mRenderer->Initialize();
         requestUpdate();
     }
 
     void resizeEvent(QResizeEvent* aEvent) override
     {
         printf("ResizeEvent: {%d, %d}\n",aEvent->size().width(), aEvent->size().height());
-        aEvent->accept();
 
-        if (mRenderer)
+        if (mRenderer && mRenderer->Initialized())
         {
             mRenderer->Resize(aEvent->size().width(), aEvent->size().height());
         }
+        
+        aEvent->accept();
     }
 
     void keyPressEvent(QKeyEvent* aEvent) override
