@@ -77,21 +77,12 @@ public:
     QSdlWindow(RendererType aType)
         : mType{aType}
     {
-    }
-
-    ~QSdlWindow() override = default;
-    
-
-    // GL Stuff, needs to be factored out.
-
-    void Initialize()
-    {
         if (RendererType::VkRenderer == mType)
         {
             #ifdef HAVE_VULKAN
                 SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "1");
             #endif
-                
+
             SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_OPENGL, "0");
             setSurfaceType(QSurface::VulkanSurface);
         }
@@ -102,16 +93,23 @@ public:
             #ifdef HAVE_VULKAN
                 SDL_SetHint(SDL_HINT_VIDEO_FOREIGN_WINDOW_VULKAN, "0");
             #endif
-                setSurfaceType(QSurface::OpenGLSurface);
+            setSurfaceType(QSurface::OpenGLSurface);
         }
         else if (RendererType::Dx12Renderer == mType
             || RendererType::Dx11Renderer == mType)
         {
             setSurfaceType(QSurface::Direct3DSurface);
         }
+    }
 
-        destroy();
-        create();
+    ~QSdlWindow() override = default;
+    
+
+    // GL Stuff, needs to be factored out.
+
+    void Initialize()
+    {
+
 
         mWindowId = reinterpret_cast<void*>(winId());
         mWindow = SDL_CreateWindowFrom(mWindowId);

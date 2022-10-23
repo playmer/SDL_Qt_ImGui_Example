@@ -130,8 +130,6 @@ private:
 
     VkRenderPass mRenderPass;
 
-    SDL_Window* mWindow;
-
     size_t mCurrentFrame = 0;
     uint32_t mImageIndex = 0;
 
