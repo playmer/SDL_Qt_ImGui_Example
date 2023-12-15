@@ -18,56 +18,56 @@
 
 #include "imgui.h"
 
-#include "Renderers/Renderer.hpp"
+//#include "Renderers/Renderer.hpp"
 
-#include "DockManager.h"
+//#include "DockManager.h"
 
-class DockOwningMainWindow : public QMainWindow
-{
-public:
-
-    explicit DockOwningMainWindow(QWidget* parent = nullptr) :
-        QMainWindow(parent)
-    {
-        // Create the dock manager after the ui is setup. Because the
-        // parent parameter is a QMainWindow the dock manager registers
-        // itself as the central widget as such the ui must be set up first.
-        mDockManager = new ads::CDockManager(this);
-
-        //// Create example content label - this can be any application specific
-        //// widget
-        //QLabel* l = new QLabel();
-        //l->setWordWrap(true);
-        //l->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-        //l->setText("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ");
-        //
-        //// Create a dock widget with the title Label 1 and set the created label
-        //// as the dock widget content
-        //ads::CDockWidget* DockWidget = new ads::CDockWidget("Label 1");
-        //DockWidget->setWidget(l);
-
-        // Add the toggleViewAction of the dock widget to the menu to give
-        // the user the possibility to show the dock widget if it has been closed
-        //ui->menuView->addAction(DockWidget->toggleViewAction());
-
-        // Add the dock widget to the top dock widget area
-        //mDockManager->addDockWidget(ads::TopDockWidgetArea, DockWidget);
-    }
-
-    ~DockOwningMainWindow()
-    {
-    }
-
-    ads::CDockManager* GetDockManager()
-    {
-        return mDockManager;
-    }
-
-private:
-
-    // The main container for docking
-    ads::CDockManager* mDockManager;
-};
+//class DockOwningMainWindow : public QMainWindow
+//{
+//public:
+//
+//    explicit DockOwningMainWindow(QWidget* parent = nullptr) :
+//        QMainWindow(parent)
+//    {
+//        // Create the dock manager after the ui is setup. Because the
+//        // parent parameter is a QMainWindow the dock manager registers
+//        // itself as the central widget as such the ui must be set up first.
+//        mDockManager = new ads::CDockManager(this);
+//
+//        //// Create example content label - this can be any application specific
+//        //// widget
+//        //QLabel* l = new QLabel();
+//        //l->setWordWrap(true);
+//        //l->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+//        //l->setText("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ");
+//        //
+//        //// Create a dock widget with the title Label 1 and set the created label
+//        //// as the dock widget content
+//        //ads::CDockWidget* DockWidget = new ads::CDockWidget("Label 1");
+//        //DockWidget->setWidget(l);
+//
+//        // Add the toggleViewAction of the dock widget to the menu to give
+//        // the user the possibility to show the dock widget if it has been closed
+//        //ui->menuView->addAction(DockWidget->toggleViewAction());
+//
+//        // Add the dock widget to the top dock widget area
+//        //mDockManager->addDockWidget(ads::TopDockWidgetArea, DockWidget);
+//    }
+//
+//    ~DockOwningMainWindow()
+//    {
+//    }
+//
+//    ads::CDockManager* GetDockManager()
+//    {
+//        return mDockManager;
+//    }
+//
+//private:
+//
+//    // The main container for docking
+//    ads::CDockManager* mDockManager;
+//};
 
 
     
