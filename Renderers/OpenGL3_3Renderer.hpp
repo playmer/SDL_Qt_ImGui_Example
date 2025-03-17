@@ -12,6 +12,7 @@ public:
 	void Initialize() override;
 	void Update() override;
 	void Resize(unsigned int aWidth, unsigned int aHeight) override;
+    virtual const char* Name() override { return "OpenGL3_3Renderer"; };
 
 private:
     unsigned int vertexShader;

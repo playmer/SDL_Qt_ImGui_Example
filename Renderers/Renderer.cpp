@@ -8,7 +8,7 @@ const std::array<float, 9> Renderer::TriangleVerts = {
 
 
 
-std::unique_ptr<Renderer> CreateRenderer(RendererType aType, SDL_Window* aWindow)
+std::unique_ptr<Renderer> CreateRenderer(SDL_Window* aWindow, RendererType aType, const char* aRenderBackend)
 {
 	switch (aType)
 	{
@@ -21,6 +21,7 @@ std::unique_ptr<Renderer> CreateRenderer(RendererType aType, SDL_Window* aWindow
 		#ifdef HAVE_VULKAN
 			case RendererType::VkRenderer: return CreateVkRenderer(aWindow);
 		#endif // HAVE_VULKAN
+            case RendererType::SdlRenderRenderer: return CreateSdlRenderRenderer(aWindow, aRenderBackend);
 		default: printf("No renderer of type %d", (int)aType);  return nullptr;
 	}
 }

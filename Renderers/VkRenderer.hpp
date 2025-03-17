@@ -6,7 +6,7 @@
 
 #include "VkBootstrap.h"
 
-#include "SDL2/SDL.h"
+#include "SDL3/SDL.h"
 
 #include "Renderers/Renderer.hpp"
 
@@ -102,6 +102,7 @@ public:
 	void Initialize() override;
 	void Update() override;
 	void Resize(unsigned int aWidth, unsigned int aHeight) override;
+    virtual const char* Name() override { return "VkRenderer"; };
 
 private:
 	VkRenderPass CreateRenderPass();

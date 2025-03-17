@@ -6,21 +6,12 @@
             "name": "directx-headers",
             "platform": "windows"
         },
-        {
-            "name": "imgui",
-            "features": [ "sdl2-binding", "sdl2-renderer-binding" ]
-        },
-        "imguizmo",
         "glad",
         {
             "name": "qtbase",
             "features": [ "vulkan" ]
         },
         "qt-advanced-docking-system",
-        {
-            "name": "sdl2",
-            "features": [ "vulkan" ]
-        },
         "vk-bootstrap",
         "vulkan-memory-allocator"
     ]

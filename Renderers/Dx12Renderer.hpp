@@ -20,6 +20,7 @@ public:
 	void Initialize() override;
 	void Update() override;
 	void Resize(unsigned int aWidth, unsigned int aHeight) override;
+    virtual const char* Name() override { return "Dx12Renderer"; };
 
 private:
     void WaitForPreviousFrame();

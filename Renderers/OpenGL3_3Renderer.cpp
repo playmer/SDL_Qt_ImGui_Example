@@ -1,6 +1,7 @@
 #include <cstdio>
 
-#include "SDL2/SDL.h"
+#define SDL_FUNCTION_POINTER_IS_VOID_POINTER
+#include "SDL3/SDL.h"
 
 #include "glad/glad.h"
 

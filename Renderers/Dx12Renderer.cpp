@@ -2,8 +2,6 @@
 
 #include <d3dcompiler.h>
 
-#include <SDL_syswm.h>
-
 #include "Renderers/Dx12Renderer.hpp"
 
 static const char* shader = R"(
@@ -42,11 +40,7 @@ inline void ThrowIfFailed(HRESULT hr)
 DX12Renderer::DX12Renderer(SDL_Window* aWindow)
 	: Renderer{ aWindow }
 {
-    SDL_SysWMinfo wmInfo;
-    SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(mWindow, &wmInfo);
-    HWND hwnd = (HWND)wmInfo.info.win.window;
-
+    HWND hwnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(aWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
     UINT dxgiFactoryFlags = 0;
 
 #if defined(_DEBUG)

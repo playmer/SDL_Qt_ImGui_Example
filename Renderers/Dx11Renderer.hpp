@@ -15,6 +15,7 @@ public:
 	void Initialize() override;
 	void Update() override;
 	void Resize(unsigned int aWidth, unsigned int aHeight) override;
+    virtual const char* Name() override { return "Dx11Renderer"; };
 
 private:
 	void CleanupRenderTarget();

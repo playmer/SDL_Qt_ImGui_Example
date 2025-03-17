@@ -2,7 +2,7 @@
 #define VMA_STATS_STRING_ENABLED 0
 #include "vk_mem_alloc.h"
 
-#include "SDL_vulkan.h"
+#include "SDL3/SDL_vulkan.h"
 
 #include "Renderers/Renderer.hpp"
 
@@ -284,10 +284,10 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
     // Create Instance
     vkb::InstanceBuilder instance_builder;
     instance_builder
-      .set_app_name("Application")
-      .set_engine_name("SOIS")
-      .require_api_version(1, 0, 0)
-      .set_debug_callback(&DebugUtilsCallback);
+        .set_app_name("Application")
+        .set_engine_name("SOIS")
+        .require_api_version(1, 0, 0)
+        .set_debug_callback(&DebugUtilsCallback);
 
     auto system_info_ret = vkb::SystemInfo::get_system_info();
     if (!system_info_ret)
@@ -298,31 +298,24 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
 
     auto system_info = system_info_ret.value();
     if (system_info.validation_layers_available) {
-      instance_builder.enable_validation_layers();
+        instance_builder.enable_validation_layers();
     }
 
-      unsigned int count;
-      if (!SDL_Vulkan_GetInstanceExtensions(aWindow, &count, nullptr))
-      {
-          printf("Failed to get required Vulkan Instance Extensions from SDL\n");
-          return;
-      }
+    Uint32 sdl_extensions_count;
+    const char* const* sdl_extensions = SDL_Vulkan_GetInstanceExtensions(&sdl_extensions_count);
+    if (nullptr == sdl_extensions)
+    {
+        printf("Failed to get required Vulkan Instance Extensions from SDL\n");
+        return;
+    }
 
-      std::vector<const char*> extensions;
-      size_t additional_extension_count = extensions.size();
-      extensions.resize(additional_extension_count + count);
+    const char* const* extensions_end = sdl_extensions + sdl_extensions_count;
+    for (sdl_extensions; sdl_extensions < extensions_end; ++sdl_extensions)
+    {
+        instance_builder.enable_extension(*sdl_extensions);
+    }
 
-      if (!SDL_Vulkan_GetInstanceExtensions(aWindow, &count, extensions.data() + additional_extension_count)) {
-          printf("Failed to get required Vulkan Instance Extensions from SDL\n");
-          return;
-      }
-
-      for (auto& extension : extensions)
-      {
-          instance_builder.enable_extension(extension);
-      }
-
-      auto instance_builder_return = instance_builder.build();
+    auto instance_builder_return = instance_builder.build();
 
     if (!instance_builder_return) {
         printf("Failed to create Vulkan instance. Error: %s\n", instance_builder_return.error().message().c_str());
@@ -333,8 +326,7 @@ VkRenderer::VkRenderer(SDL_Window* aWindow)
     ///////////////////////////////////////
     // Create Surface
     {
-        SDL_bool err = SDL_Vulkan_CreateSurface(aWindow, mInstance.instance, &mSurface);
-        if (!err) {
+        if (!SDL_Vulkan_CreateSurface(aWindow, mInstance.instance, nullptr, &mSurface)) {
             printf("Failed to create Vulkan Surface.\n");
             return;
         }

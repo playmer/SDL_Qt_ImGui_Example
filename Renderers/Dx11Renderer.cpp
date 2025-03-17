@@ -1,7 +1,5 @@
 #include <d3dcompiler.h>
 
-#include <SDL_syswm.h>
-
 #include "Renderers/Dx11Renderer.hpp"
 
 static const char* shader = R"(
@@ -35,12 +33,7 @@ DX11Renderer::DX11Renderer(SDL_Window* aWindow)
 	: Renderer{ aWindow }
 {
     mWindow = aWindow;
-
-    SDL_SysWMinfo wmInfo;
-    SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(mWindow, &wmInfo);
-    HWND hwnd = (HWND)wmInfo.info.win.window;
-
+    HWND hwnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(aWindow), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
     
     // Setup swap chain
     DXGI_SWAP_CHAIN_DESC sd;
