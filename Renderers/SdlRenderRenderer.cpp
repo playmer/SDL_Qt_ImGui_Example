@@ -13,7 +13,7 @@ SDLRenderRenderer::SDLRenderRenderer(SDL_Window* aWindow, const char* aRendererB
 
     if (nullptr == mRenderer) {
         printf("SDL Error: %s\n", SDL_GetError());
-        __debugbreak();
+        SDL_TriggerBreakpoint();
     }
 }
 
@@ -28,11 +28,11 @@ void SDLRenderRenderer::Update()
 
     int x = 0, y = 0;
     SDL_GetWindowSize(mWindow, &x, &y);
-    int width_center = x / 2;
-    int height_center = y / 2;
+    float width_center = x / 2;
+    float height_center = y / 2;
 
     SDL_SetRenderDrawColor(mRenderer, mTriangleColor .r, mTriangleColor.g, mTriangleColor.b, mTriangleColor .a);
-    SDL_FRect rect{ width_center - (width_center / 2), height_center - (height_center / 2), width_center, height_center };
+    SDL_FRect rect{ width_center - (width_center / 2.f), height_center - (height_center / 2.f), width_center, height_center };
     SDL_RenderFillRect(mRenderer, &rect);
     if (!SDL_RenderPresent(mRenderer)) {
         printf("SDL Error: %s\n", SDL_GetError());

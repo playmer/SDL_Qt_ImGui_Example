@@ -90,9 +90,9 @@ public:
         if ((RendererType::VkRenderer == mType) || 
             ((RendererType::SdlRenderRenderer == mType) && (strcmp(mRendererBackend, "vulkan") == 0)))
         {
-#ifdef HAVE_VULKAN
-            SDL_SetBooleanProperty(window_props, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, true);
-#endif
+            #ifdef HAVE_VULKAN
+                SDL_SetBooleanProperty(window_props, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, true);
+            #endif
             SDL_SetBooleanProperty(window_props, SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN, false);
             setSurfaceType(QSurface::VulkanSurface);
         }
@@ -103,9 +103,9 @@ public:
         {
             SDL_SetBooleanProperty(window_props, SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN, true);
 
-#ifdef HAVE_VULKAN
-            SDL_SetBooleanProperty(window_props, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, false);
-#endif
+            #ifdef HAVE_VULKAN
+                SDL_SetBooleanProperty(window_props, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, false);
+            #endif
             setSurfaceType(QSurface::OpenGLSurface);
         }
         else if (RendererType::Dx12Renderer == mType
@@ -116,7 +116,11 @@ public:
 
         mWindowId = reinterpret_cast<void*>(winId());
 
-        SDL_SetPointerProperty(window_props, SDL_PROP_WINDOW_CREATE_WIN32_HWND_POINTER, mWindowId);
+        #ifdef _WIN32
+            SDL_SetPointerProperty(window_props, SDL_PROP_WINDOW_CREATE_WIN32_HWND_POINTER, mWindowId);
+        #elif defined(__APPLE__)
+            SDL_SetPointerProperty(window_props, SDL_PROP_WINDOW_CREATE_COCOA_VIEW_POINTER, mWindowId);
+        #endif
         mWindow = SDL_CreateWindowWithProperties(window_props);
         mRenderer = CreateRenderer(mWindow, mType, mRendererBackend);
 
@@ -299,8 +303,8 @@ int main(int argc, char *argv[])
     createSdlWindow(window, RendererType::Dx12Renderer, nullptr, ads::TopDockWidgetArea, { 0xFF, 0x00, 0xFF, 0xFF });
 #endif // WIN32
 
-    createSdlWindow(window, RendererType::VkRenderer, nullptr, ads::TopDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF });
-    createSdlWindow(window, RendererType::OpenGL3_3Renderer, nullptr, ads::TopDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF });
+    //createSdlWindow(window, RendererType::VkRenderer, nullptr, ads::TopDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF });
+    //createSdlWindow(window, RendererType::OpenGL3_3Renderer, nullptr, ads::TopDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF });
 
     auto drivers = SDL_GetNumRenderDrivers();
 
@@ -310,9 +314,12 @@ int main(int argc, char *argv[])
     }
     printf("Drivers End\n;");
 
-    for (size_t i = 0; i < drivers; ++i) {
-        createSdlWindow(window, RendererType::SdlRenderRenderer, SDL_GetRenderDriver(i), ads::BottomDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
-    }
+
+    createSdlWindow(window, RendererType::SdlRenderRenderer, "opengl", ads::BottomDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+    createSdlWindow(window, RendererType::SdlRenderRenderer, "metal", ads::BottomDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+    // for (size_t i = 0; i < drivers; ++i) {
+    //     createSdlWindow(window, RendererType::SdlRenderRenderer, SDL_GetRenderDriver(i), ads::BottomDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+    // }
 
     QTimer::singleShot(0, []()
     {
