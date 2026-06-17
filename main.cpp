@@ -297,12 +297,19 @@ int main(int argc, char *argv[])
     }
     printf("Drivers End\n;");
 
-
-    //createSdlWindow(window, RendererType::SdlRenderRenderer, "opengl", Qt::TopDockWidgetArea, { 0x00, 0x00, 0x00, 0xFF });
-    //createSdlWindow(window, RendererType::SdlRenderRenderer, "metal", Qt::TopDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+    // For some reason Apple really doesn't like running all of the render drivers. I'm not sure if it's on me, an SDL
+    // issue, or a Qt issue. For now, just run what we know works, it seems like opengles2 and vulkan are the issues.
+    // Presumably I'd need the MoltenVk/CosmicKrisp SDK set up for vulkan, but I'm not sure what's wrong with OpenGLes2.
+#if defined(__APPLE__)
+    createSdlWindow(window, RendererType::SdlRenderRenderer, "opengl", Qt::TopDockWidgetArea, { 0x00, 0x00, 0x00, 0xFF });
+    createSdlWindow(window, RendererType::SdlRenderRenderer, "metal", Qt::TopDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+    createSdlWindow(window, RendererType::SdlRenderRenderer, "gpu", Qt::TopDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+    createSdlWindow(window, RendererType::SdlRenderRenderer, "software", Qt::TopDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+#else
     for (size_t i = 0; i < drivers; ++i) {
         createSdlWindow(window, RendererType::SdlRenderRenderer, SDL_GetRenderDriver(i), Qt::TopDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
     }
+#endif
 
     QTimer::singleShot(0, []()
     {

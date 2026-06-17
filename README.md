@@ -1,6 +1,13 @@
 # SDL_Qt_ImGui_Example
 
 
+```cmake
+git clone --recurse-submodules -j8 https://github.com/playmer/SDL_Qt_ImGui_Example.git
+mkdir build
+cd build
+cmake "-DCMAKE_TOOLCHAIN_FILE=../deps/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+```
+
 # Mac Dependencies
  - CMake
  - Xcode
