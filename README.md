@@ -1,5 +1,10 @@
 # SDL_Qt_ImGui_Example
 
+You'll need to have the location of your preferred Qt version install exported as an environment variable, such as this:
+
+```bash
+export Qt=/Users/playmer/Qt/6.11.1  
+```
 
 ```cmake
 git clone --recurse-submodules -j8 https://github.com/playmer/SDL_Qt_ImGui_Example.git
