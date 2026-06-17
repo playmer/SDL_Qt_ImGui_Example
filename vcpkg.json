@@ -6,12 +6,6 @@
             "name": "directx-headers",
             "platform": "windows"
         },
-        "glad",
-        {
-            "name": "qtbase",
-            "features": [ "vulkan" ]
-        },
-        "qt-advanced-docking-system",
         "vk-bootstrap",
         "vulkan-memory-allocator"
     ]

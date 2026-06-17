@@ -3,7 +3,8 @@
 #define SDL_FUNCTION_POINTER_IS_VOID_POINTER
 #include "SDL3/SDL.h"
 
-#include "glad/glad.h"
+#define GLAD_GL_IMPLEMENTATION
+#include "glad/gl.h"
 
 #include "Renderers/Renderer.hpp"
 #include "Renderers/OpenGL3_3Renderer.hpp"
@@ -69,7 +70,7 @@ static char const* Type(GLenum type)
 }
 
 
-static void APIENTRY messageCallback(GLenum source,
+static void GLAD_API_PTR messageCallback(GLenum source,
     GLenum type,
     GLuint id,
     GLenum severity,
@@ -93,6 +94,11 @@ static void APIENTRY messageCallback(GLenum source,
 std::unique_ptr<Renderer> CreateOpenGL3_3Renderer(SDL_Window* aWindow)
 {
     return std::unique_ptr<Renderer>(new OpenGL3_3Renderer(aWindow));
+}
+
+GLADapiproc intermediateLoader(const char* name)
+{
+    return (GLADapiproc)SDL_GL_GetProcAddress(name);
 }
 
 OpenGL3_3Renderer::OpenGL3_3Renderer(SDL_Window* aWindow)
@@ -132,9 +138,8 @@ OpenGL3_3Renderer::OpenGL3_3Renderer(SDL_Window* aWindow)
     mGlContext = SDL_GL_CreateContext(mWindow);
     SDL_GL_MakeCurrent(mWindow, mGlContext);
 
-    gladLoadGLLoader(SDL_GL_GetProcAddress);
+    gladLoadGL(intermediateLoader);
 
-        
     glEnable(GL_DEBUG_OUTPUT);
 
     // FIXME: This doesn't work on Apple when I tested it, need to look into this more on 
@@ -179,7 +184,6 @@ void OpenGL3_3Renderer::Initialize()
 void OpenGL3_3Renderer::Update()
 {
     SDL_GL_MakeCurrent(mWindow, mGlContext);
-    gladLoadGLLoader(SDL_GL_GetProcAddress);
 
     // Rendering
     int width, height;

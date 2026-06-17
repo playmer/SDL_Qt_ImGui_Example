@@ -1,32 +1,31 @@
 cmake_minimum_required(VERSION 3.26)
 
-#include(FetchContent)
-#FetchContent_Declare(
-#    vcpkg
-#    GIT_REPOSITORY https://github.com/playmer/vcpkg.git
-#    GIT_TAG        origin/playmer/AllTheThings
-#)
-
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    #FetchContent_Populate(vcpkg)
-    
-    set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/deps/vcpkg/scripts/buildsystems/vcpkg.cmake")
-endif()
-
 project(SDL3_Qt_Example C CXX)
 
 add_subdirectory(deps/SDL EXCLUDE_FROM_ALL)
 
-#add_executable(SDL3_Qt_Example)
+if (CMAKE_SYSTEM_NAME STREQUAL Windows OR CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    # Find the QtWidgets library
+    set(QtPath $ENV{Qt})
+    if(NOT QtPath) 
+        message(FATAL_ERROR "Please define the environment variable `Qt` with the path to Qt 6.10.2 - i.e. export Qt = C:/Qt/6.10.2")
+    endif()
 
-find_package(glad CONFIG REQUIRED)
-find_package(qtadvanceddocking-qt6 CONFIG REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+    
+    if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+        list(PREPEND CMAKE_PREFIX_PATH ${QtPath}/msvc2022_64/)
+    else()
+        list(PREPEND CMAKE_PREFIX_PATH ${QtPath}/clang/) # THIS IS WRONG, NEED TO INSTALL AND FIND OUT WHERE THE SDK PUTS IT.
+    endif()
+
+    message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+endif()
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets CoreTools)
 qt_standard_project_setup()
 
 find_package(Vulkan)
 
-#add_executable(SDL3_Qt_Example)
 qt_add_executable(SDL3_Qt_Example)
 
 target_sources(SDL3_Qt_Example
@@ -49,36 +48,35 @@ PRIVATE
 target_include_directories(SDL3_Qt_Example 
 PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/deps/glad/include
 )
 
 target_link_libraries(SDL3_Qt_Example 
 PRIVATE 
     SDL3::SDL3 
     Qt::Widgets
-    glad::glad
-    ads::qtadvanceddocking-qt6
 )
 
-if (${Vulkan_FOUND})
-    find_package(vk-bootstrap CONFIG REQUIRED)
-    find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-
-    target_sources(SDL3_Qt_Example
-    PRIVATE
-        Renderers/VkRenderer.cpp
-        Renderers/VkRenderer.hpp
-    )
-
-    target_compile_definitions(SDL3_Qt_Example PUBLIC HAVE_VULKAN)
-
-    target_include_directories(SDL3_Qt_Example PUBLIC ${Vulkan_INCLUDE_DIRS})
-    target_link_libraries(SDL3_Qt_Example 
-    PUBLIC 
-        vk-bootstrap::vk-bootstrap
-        Vulkan::Vulkan
-        GPUOpen::VulkanMemoryAllocator
-    )
-endif()
+#if (${Vulkan_FOUND})
+#    find_package(vk-bootstrap CONFIG REQUIRED)
+#    find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+#
+#    target_sources(SDL3_Qt_Example
+#    PRIVATE
+#        Renderers/VkRenderer.cpp
+#        Renderers/VkRenderer.hpp
+#    )
+#
+#    target_compile_definitions(SDL3_Qt_Example PUBLIC HAVE_VULKAN)
+#
+#    target_include_directories(SDL3_Qt_Example PUBLIC ${Vulkan_INCLUDE_DIRS})
+#    target_link_libraries(SDL3_Qt_Example 
+#    PUBLIC 
+#        vk-bootstrap::vk-bootstrap
+#        Vulkan::Vulkan
+#        GPUOpen::VulkanMemoryAllocator
+#    )
+#endif()
 
 #install(TARGETS SDL3_Qt_Example
 #    BUNDLE  DESTINATION .
@@ -104,7 +102,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL Windows)
     )
 
     # Qt Deployment stuff
-    find_program(TOOL_WINDEPLOYQT_DEBUG NAMES windeployqt.debug.bat)
+    find_program(TOOL_WINDEPLOYQT_DEBUG NAMES windeployqt)
     find_program(TOOL_WINDEPLOYQT NAMES windeployqt)
 
     add_custom_command(TARGET SDL3_Qt_Example POST_BUILD

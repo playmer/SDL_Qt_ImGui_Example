@@ -18,7 +18,7 @@
 
 #include "Renderers/Renderer.hpp"
 
-#include "DockManager.h"
+//#include "DockManager.h"
 
 class DockOwningMainWindow : public QMainWindow
 {
@@ -27,36 +27,19 @@ public:
     explicit DockOwningMainWindow(QWidget* parent = nullptr) :
         QMainWindow(parent)
     {
-        // Create the dock manager after the ui is setup. Because the
-        // parent parameter is a QMainWindow the dock manager registers
-        // itself as the central widget as such the ui must be set up first.
-        mDockManager = new ads::CDockManager(this);
+        mDockManager = new QWidget();
 
-        //// Create example content label - this can be any application specific
-        //// widget
-        //QLabel* l = new QLabel();
-        //l->setWordWrap(true);
-        //l->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-        //l->setText("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ");
-        //
-        //// Create a dock widget with the title Label 1 and set the created label
-        //// as the dock widget content
-        //ads::CDockWidget* DockWidget = new ads::CDockWidget("Label 1");
-        //DockWidget->setWidget(l);
+        setCentralWidget(mDockManager);
 
-        // Add the toggleViewAction of the dock widget to the menu to give
-        // the user the possibility to show the dock widget if it has been closed
-        //ui->menuView->addAction(DockWidget->toggleViewAction());
-
-        // Add the dock widget to the top dock widget area
-        //mDockManager->addDockWidget(ads::TopDockWidgetArea, DockWidget);
+        // Allows infinite docking.
+        setDockNestingEnabled(true);
     }
 
     ~DockOwningMainWindow()
     {
     }
 
-    ads::CDockManager* GetDockManager()
+    QWidget* GetDockManager()
     {
         return mDockManager;
     }
@@ -64,7 +47,7 @@ public:
 private:
 
     // The main container for docking
-    ads::CDockManager* mDockManager;
+    QWidget* mDockManager;
 };
 
 
@@ -206,16 +189,16 @@ void sdl_event_loop()
     });
 }
 
-void createSdlWindow(DockOwningMainWindow* aMainWindow, RendererType aType, const char* aRendererBackend, ads::DockWidgetArea aArea, color aClearColor)
+void createSdlWindow(DockOwningMainWindow* aMainWindow, RendererType aType, const char* aRendererBackend, Qt::DockWidgetArea aArea, color aClearColor)
 {
     auto sdlWindow = new QSdlWindow(aType, aRendererBackend);
-    auto dockWidget = new ads::CDockWidget("", aMainWindow);
-    dockWidget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
+    auto dockWidget = new QDockWidget("", aMainWindow);
+    //dockWidget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
     //dockWidget->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     auto sdlWidget = QWidget::createWindowContainer(sdlWindow);
     dockWidget->setWidget(sdlWidget);
 
-    aMainWindow->GetDockManager()->addDockWidget(aArea, dockWidget);
+    aMainWindow->addDockWidget(aArea, dockWidget);
     sdlWidget->setMinimumSize(10, 10);
     sdlWidget->setBaseSize(480, 320);
     sdlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -239,11 +222,11 @@ int main(int argc, char *argv[])
     // central window in the middle of the docking panels that doesn't move.
     auto window = new DockOwningMainWindow;
     //window->setCentralWidget(nullptr);
-    //auto centralWidget = new QWidget();
-    //window->setCentralWidget(centralWidget);
-    //window->centralWidget()->setBaseSize(0, 0);
-    //window->centralWidget()->setMinimumSize(0, 0);
-    //window->centralWidget()->setMaximumSize(0,0);
+    auto centralWidget = new QWidget();
+    window->setCentralWidget(centralWidget);
+    window->centralWidget()->setBaseSize(0, 0);
+    window->centralWidget()->setMinimumSize(0, 0);
+    window->centralWidget()->setMaximumSize(0,0);
     //window->centralWidget()->hide();
 
     // Enables "infinite docking".
@@ -298,10 +281,10 @@ int main(int argc, char *argv[])
     //createSdlWindow(window, RendererType::VkRenderer, nullptr, ads::LeftDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF });
     //createSdlWindow(window, RendererType::OpenGL3_3Renderer, nullptr, ads::RightDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF });
 
-#if WIN32
-    createSdlWindow(window, RendererType::Dx11Renderer, nullptr, ads::TopDockWidgetArea, { 0x00, 0xFF, 0x00, 0xFF });
-    createSdlWindow(window, RendererType::Dx12Renderer, nullptr, ads::TopDockWidgetArea, { 0xFF, 0x00, 0xFF, 0xFF });
-#endif // WIN32
+//#if WIN32
+//    createSdlWindow(window, RendererType::Dx11Renderer, nullptr, Qt::BottomDockWidgetArea, { 0x00, 0xFF, 0x00, 0xFF });
+//    createSdlWindow(window, RendererType::Dx12Renderer, nullptr, Qt::BottomDockWidgetArea, { 0xFF, 0x00, 0xFF, 0xFF });
+//#endif
 
     //createSdlWindow(window, RendererType::VkRenderer, nullptr, ads::TopDockWidgetArea, { 0x00, 0x00, 0xFF, 0xFF });
     //createSdlWindow(window, RendererType::OpenGL3_3Renderer, nullptr, ads::TopDockWidgetArea, { 0xFF, 0x00, 0x00, 0xFF });
@@ -315,11 +298,11 @@ int main(int argc, char *argv[])
     printf("Drivers End\n;");
 
 
-    createSdlWindow(window, RendererType::SdlRenderRenderer, "opengl", ads::BottomDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
-    createSdlWindow(window, RendererType::SdlRenderRenderer, "metal", ads::BottomDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
-    // for (size_t i = 0; i < drivers; ++i) {
-    //     createSdlWindow(window, RendererType::SdlRenderRenderer, SDL_GetRenderDriver(i), ads::BottomDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
-    // }
+    //createSdlWindow(window, RendererType::SdlRenderRenderer, "opengl", Qt::TopDockWidgetArea, { 0x00, 0x00, 0x00, 0xFF });
+    //createSdlWindow(window, RendererType::SdlRenderRenderer, "metal", Qt::TopDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+    for (size_t i = 0; i < drivers; ++i) {
+        createSdlWindow(window, RendererType::SdlRenderRenderer, SDL_GetRenderDriver(i), Qt::TopDockWidgetArea, {0x00, 0x00, 0x00, 0xFF});
+    }
 
     QTimer::singleShot(0, []()
     {
